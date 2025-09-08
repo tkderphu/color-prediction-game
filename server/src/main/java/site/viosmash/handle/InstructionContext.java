@@ -1,8 +1,8 @@
 package site.viosmash.handle;
 
-import site.viosmash.common.ErrorResponse;
-import site.viosmash.common.Instruction;
-import site.viosmash.common.Message;
+import site.viosmash.common.instruction.ErrorResponse;
+import site.viosmash.common.instruction.Instruction;
+import site.viosmash.common.instruction.Message;
 import site.viosmash.network.ClientHandler;
 
 import java.util.HashMap;

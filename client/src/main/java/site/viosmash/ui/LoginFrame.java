@@ -1,9 +1,9 @@
 package site.viosmash.ui;
 
-import site.viosmash.common.Instruction;
-import site.viosmash.common.LoginRequest;
-import site.viosmash.common.LoginResponse;
-import site.viosmash.common.Message;
+import site.viosmash.common.instruction.Instruction;
+import site.viosmash.common.instruction.LoginRequest;
+import site.viosmash.common.instruction.LoginResponse;
+import site.viosmash.common.instruction.Message;
 import site.viosmash.network.ClientConnection;
 
 import javax.swing.*;

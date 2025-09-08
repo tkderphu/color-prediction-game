@@ -1,4 +1,4 @@
-package site.viosmash.common;
+package site.viosmash.common.instruction;
 
 import java.io.Serializable;
 

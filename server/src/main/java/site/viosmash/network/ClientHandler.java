@@ -1,8 +1,7 @@
 package site.viosmash.network;
 
-import site.viosmash.common.LoginResponse;
-import site.viosmash.common.Message;
-import site.viosmash.common.User;
+import site.viosmash.common.instruction.Message;
+import site.viosmash.common.model.User;
 import site.viosmash.handle.InstructionContext;
 
 import java.io.IOException;

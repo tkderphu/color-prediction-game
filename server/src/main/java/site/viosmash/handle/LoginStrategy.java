@@ -1,9 +1,9 @@
 package site.viosmash.handle;
 
-import site.viosmash.common.LoginRequest;
-import site.viosmash.common.LoginResponse;
-import site.viosmash.common.Message;
-import site.viosmash.common.User;
+import site.viosmash.common.instruction.LoginRequest;
+import site.viosmash.common.instruction.LoginResponse;
+import site.viosmash.common.instruction.Message;
+import site.viosmash.common.model.User;
 import site.viosmash.db.UserDao;
 import site.viosmash.network.ClientHandler;
 

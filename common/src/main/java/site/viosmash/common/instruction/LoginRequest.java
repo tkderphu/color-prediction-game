@@ -1,17 +1,11 @@
-package site.viosmash.common;
+package site.viosmash.common.instruction;
 
-public class User {
-    private int id;
+
+import java.io.Serializable;
+
+public class LoginRequest implements Serializable {
     private String username;
     private String password;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public String getUsername() {
         return username;

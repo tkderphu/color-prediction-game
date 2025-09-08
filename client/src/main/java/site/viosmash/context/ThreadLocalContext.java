@@ -1,7 +1,10 @@
 package site.viosmash.context;
 
-import site.viosmash.common.User;
+import site.viosmash.common.model.User;
 
+/**
+ * Luu thong sau thi login
+ */
 public class ThreadLocalContext {
     private final ThreadLocal<User> THREAD_LOCAL = new ThreadLocal<>();
 

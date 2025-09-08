@@ -1,9 +1,26 @@
-package site.viosmash.common;
+package site.viosmash.common.model;
 
-
-public class LoginRequest {
+public class User {
+    private int id;
     private String username;
     private String password;
+    private Boolean online;
+
+    public Boolean getOnline() {
+        return online;
+    }
+
+    public void setOnline(Boolean online) {
+        this.online = online;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getUsername() {
         return username;

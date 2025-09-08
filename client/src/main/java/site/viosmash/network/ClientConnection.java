@@ -1,6 +1,6 @@
 package site.viosmash.network;
 
-import site.viosmash.common.Message;
+import site.viosmash.common.instruction.Message;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
