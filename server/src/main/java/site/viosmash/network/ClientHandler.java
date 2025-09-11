@@ -33,10 +33,10 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    public void sendResponse(Object response) {
+    public void sendResponse(Message message) {
         try {
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            out.writeObject(response);
+            out.writeObject(message.getPayload());
         } catch (IOException e) {
             e.printStackTrace();
         }

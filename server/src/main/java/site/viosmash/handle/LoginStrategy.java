@@ -1,5 +1,6 @@
 package site.viosmash.handle;
 
+import site.viosmash.common.instruction.Instruction;
 import site.viosmash.common.instruction.LoginRequest;
 import site.viosmash.common.instruction.LoginResponse;
 import site.viosmash.common.instruction.Message;
@@ -33,7 +34,7 @@ public class LoginStrategy implements InstructionStrategy{
             loginResponse.setUser(user);
             clientHandler.setUser(user);
         }
-
-        clientHandler.sendResponse(loginResponse);
+        Message messageResp = new Message(Instruction.LOGIN, loginResponse);
+        clientHandler.sendResponse(messageResp);
     }
 }

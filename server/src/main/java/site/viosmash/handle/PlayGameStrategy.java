@@ -1,12 +1,15 @@
 package site.viosmash.handle;
 
+import site.viosmash.common.instruction.Instruction;
 import site.viosmash.common.instruction.Message;
 import site.viosmash.common.instruction.PlayGameRequest;
 import site.viosmash.common.instruction.PlayGameResponse;
 import site.viosmash.common.model.Session;
 import site.viosmash.common.model.User;
+import site.viosmash.db.RoundDao;
 import site.viosmash.db.SessionDao;
 import site.viosmash.db.UserDao;
+import site.viosmash.game.GameEngine;
 import site.viosmash.network.ClientHandler;
 
 import java.time.LocalDateTime;
@@ -19,9 +22,11 @@ public class PlayGameStrategy implements InstructionStrategy{
 
     private final SessionDao sessionDao;
     private final UserDao userDao;
-    public PlayGameStrategy(SessionDao sessionDao, UserDao userDao) {
+    private final RoundDao roundDao;
+    public PlayGameStrategy(SessionDao sessionDao, UserDao userDao, RoundDao roundDao) {
         this.sessionDao = sessionDao;
         this.userDao = userDao;
+        this.roundDao = roundDao;
     }
 
     @Override
@@ -31,18 +36,20 @@ public class PlayGameStrategy implements InstructionStrategy{
 
         Session session = new Session();
         session.setStartedAt(LocalDateTime.now());
-        session.setOwner(user);
-
+        session.setTotalRound(playGameRequest.getTotalRound());
         int sessionId = this.sessionDao.insert(session);
 
         session.setId(sessionId);
-
-
         PlayGameResponse playGameResponse = new PlayGameResponse();
         playGameResponse.setMessage("session is created");
         playGameResponse.setSuccess(true);
         playGameResponse.setSession(session);
+        clientHandler.sendResponse(new Message(Instruction.PLAY_GAME, playGameResponse));
 
-        clientHandler.sendResponse(session);
+
+        GameEngine gameEngine = new GameEngine(null, roundDao, session);
+
+        gameEngine.send();
+
     }
 }

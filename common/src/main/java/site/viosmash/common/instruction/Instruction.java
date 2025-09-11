@@ -12,6 +12,8 @@ public enum Instruction {
     CLOSE_SESSION_GAME("Đóng session chơi game"),
     PLAY_GAME("chơi game"),
     LOGOUT("đăng xuất"),
+    NEXT_ROUND("Sang màn tiếp theo của game"),
+    SUBMIT("Gửi kết quả của màn hiện tại tới server"),
     ERROR("lỗi khi không tồn tại instruction như trên");
 
 

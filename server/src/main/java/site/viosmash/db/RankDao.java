@@ -1,6 +1,6 @@
 package site.viosmash.db;
 
-import site.viosmash.common.model.Rank;
+import site.viosmash.common.model.Score;
 
 import java.sql.Connection;
 import java.util.List;
@@ -16,13 +16,13 @@ public class RankDao {
         connection = DBConnection.getInstance().getConnection();
     }
 
-    public int insert(Rank rank) {
+    public int insert(Score score) {
         return 1;
     }
     public int updateScore(int rankId, int score) {
         return 1;
     }
-    public List<Rank> findAllBySessionId(int sessionId) {
+    public List<Score> findAllBySessionId(int sessionId) {
         return null;
     }
 }

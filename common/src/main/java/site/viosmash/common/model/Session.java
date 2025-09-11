@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 public class Session {
     private int id;
     private LocalDateTime startedAt;
-    private LocalDateTime endedAt;
-    private User owner;
+    private int totalRound;
+
 
 
     public int getId() {
@@ -29,19 +29,12 @@ public class Session {
         this.startedAt = startedAt;
     }
 
-    public LocalDateTime getEndedAt() {
-        return endedAt;
+
+    public int getTotalRound() {
+        return totalRound;
     }
 
-    public void setEndedAt(LocalDateTime endedAt) {
-        this.endedAt = endedAt;
-    }
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
+    public void setTotalRound(int totalRound) {
+        this.totalRound = totalRound;
     }
 }
