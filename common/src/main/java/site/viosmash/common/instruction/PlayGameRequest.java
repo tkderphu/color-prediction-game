@@ -27,4 +27,5 @@ public class PlayGameRequest implements Serializable {
         this.totalRound = totalRound;
     }
 
+
 }

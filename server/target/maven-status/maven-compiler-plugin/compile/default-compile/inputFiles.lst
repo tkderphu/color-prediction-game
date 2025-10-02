@@ -1,0 +1,17 @@
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\MainServer.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\db\ScoreDao.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\handle\RegisterStrategy.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\db\RoundDao.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\db\UserDao.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\game\GameEngine.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\handle\LoginStrategy.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\handle\SubmitStrategy.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\context\ContextHolder.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\network\ClientHandler.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\db\DBConnection.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\network\Server.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\handle\InstructionStrategy.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\db\RankDao.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\db\InvitationDao.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\handle\InstructionContext.java
+C:\Users\MSII\IdeaProjects\color-prediction-game\server\src\main\java\site\viosmash\db\SessionDao.java

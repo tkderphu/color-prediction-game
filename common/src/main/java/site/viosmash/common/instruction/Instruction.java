@@ -1,8 +1,9 @@
 package site.viosmash.common.instruction;
 
-public enum Instruction {
+
+public enum Instruction{
     LOGIN("đăng nhập"), //phuc
-    REGISTER("đăng ký"), //
+    REGISTER("đăng ký"),
     DISPLAY_INVITATION("hiển thị danh sách lời mời chơi game"),
     DISPLAY_HISTORY("hiển thị danh sách lịch sử chơi game của người chơi hiện tại"),
     DISPLAY_PLAYER("hiển thị toàn bộ danh sách người chơi của hệ thống"),
