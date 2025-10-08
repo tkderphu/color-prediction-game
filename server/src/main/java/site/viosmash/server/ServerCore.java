@@ -18,7 +18,7 @@ public class ServerCore {
     public final Lobby lobby = new Lobby();
     public final UserDao userDao = new UserDao();
     public final MatchDao matchDao = new MatchDao();
-
+//    public final MatchHistoryDao matchHistoryDao = new MatchHistoryDao();
     // Trạng thái trận đang diễn ra: matchId -> context
     private final Map<Long, MatchContext> matches = new ConcurrentHashMap<>();
 
@@ -63,10 +63,13 @@ public class ServerCore {
                 Map<String, Object> payload = new HashMap<>();
                 payload.put("matchId", matchId);
                 payload.put("rounds", 15);
+                payload.put("players", ctx.players);
                 h.send("MATCH_BEGIN", payload);
             }
         }
         broadcastOnlineList();
+        lobby.rooms.remove(room.owner);
+
         // Chạy 15 vòng
         new Thread(new Runnable() {
             public void run() {
@@ -122,10 +125,8 @@ public class ServerCore {
                     ClientHandler h = lobby.online.get(u);
                     if (h != null) {
                         Map<String, Object> rrPayload = new HashMap<>();
-                        rrPayload.put("roundNo", roundNo);
-                        rrPayload.put("leaderBoard", lb);
-                        rrPayload.put("roundEndsInMs", 0);
-                        h.send("ROUND_RESULT", rrPayload);
+                        rrPayload.put("leaderboard", lb);
+                        h.send("UPDATE_TABLE_SCORE", rrPayload);
                     }
                 }
 
@@ -178,13 +179,13 @@ public class ServerCore {
         ctx.roundSubmittedUsers.add(username);
 
         ClientHandler h = lobby.online.get(username);
-        if (h != null) {
-            Map<String, Object> resultPayload = new HashMap<>();
-            resultPayload.put("roundNo", roundNo);
-            resultPayload.put("yourScore", score);
-            resultPayload.put("yourTimeMs", timeMs);
-            h.send("ROUND_RESULT", resultPayload);
-        }
+//        if (h != null) {
+//            Map<String, Object> resultPayload = new HashMap<>();
+//            resultPayload.put("roundNo", roundNo);
+//            resultPayload.put("yourScore", score);
+//            resultPayload.put("yourTimeMs", timeMs);
+//            h.send("ROUND_RESULT", resultPayload);
+//        }
     }
 
     public void handleHistory(ClientHandler h, Message m) throws Exception {
@@ -214,9 +215,9 @@ public class ServerCore {
         }
 
         public static RoundSpec forRound(int r) {
-            if (r <= 5) return new RoundSpec("EASY", 3, 10000);
-            if (r <= 10) return new RoundSpec("MEDIUM", 5, 7000);
-            return new RoundSpec("HARD", 6, 5000);
+            if (r <= 5) return new RoundSpec("EASY", 3, 3000);
+            if (r <= 10) return new RoundSpec("MEDIUM", 5, 2000);
+            return new RoundSpec("HARD", 6, 1000);
         }
     }
 

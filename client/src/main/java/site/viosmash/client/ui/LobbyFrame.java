@@ -49,6 +49,7 @@ public class LobbyFrame extends JFrame {
             try {
                 java.util.Map<String, Object> payload = new java.util.HashMap<>();
                 String username = target.split("\\s+")[0];
+                payload.put("fromUsername", myName);
                 payload.put("toUsername", username);
                 net.send("INVITE", payload);
             } catch (Exception ignored) {}
@@ -63,6 +64,7 @@ public class LobbyFrame extends JFrame {
         leaveBtn.addActionListener(e -> {
             try {
                 java.util.Map<String, Object> payload = new java.util.HashMap<>();
+                payload.put("username", myName);
                 net.send("LEAVE_ROOM", payload);
             } catch (Exception ignored) {}
         });
@@ -84,10 +86,20 @@ public class LobbyFrame extends JFrame {
         });
     }
 
+    public DefaultListModel<String> getRoomModel() {
+        return roomModel;
+    }
+
     public void onRoomUpdate(String owner, List<String> members) {
         SwingUtilities.invokeLater(() -> {
             roomModel.clear();
-            for (String m : members) roomModel.addElement(m);
+            for (String m : members) {
+                if(owner.equals(m)) {
+                    roomModel.addElement(m + " - " + "owner");
+                } else {
+                    roomModel.addElement(m);
+                }
+            };
         });
     }
 
@@ -100,6 +112,7 @@ public class LobbyFrame extends JFrame {
             try {
                 java.util.Map<String, Object> payload = new java.util.HashMap<>();
                 payload.put("fromUsername", from);
+                payload.put("invitedUsername", myName);
                 payload.put("accepted", accepted);
                 net.send("INVITE_RESPONSE", payload);
             } catch (Exception ignored) {}

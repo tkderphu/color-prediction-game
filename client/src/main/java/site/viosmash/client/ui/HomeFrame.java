@@ -9,11 +9,7 @@ public class HomeFrame extends javax.swing.JFrame {
 
     private NetClient netClient;
     private User user; //username
-    private LobbyFrame2 lobbyFrame;
-
-    public void setLobbyFrame(LobbyFrame2 lobbyFrame) {
-        this.lobbyFrame = lobbyFrame;
-    }
+    private LobbyFrame lobbyFrame;
 
     public HomeFrame() {
         initComponents();
@@ -21,7 +17,7 @@ public class HomeFrame extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }
 
-    public HomeFrame(NetClient netClient, User user, LobbyFrame2 lobbyFrame) {
+    public HomeFrame(NetClient netClient, User user, LobbyFrame lobbyFrame) {
         this();  // gọi constructor mặc định để init UI
         this.lobbyFrame = lobbyFrame;
         setTitle("Color Memory Game - Trang chủ");

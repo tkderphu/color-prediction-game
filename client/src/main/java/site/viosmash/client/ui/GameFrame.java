@@ -4,6 +4,7 @@ package site.viosmash.client.ui;
 import site.viosmash.client.NetClient;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public class GameFrame extends JFrame {
     private int countdownMs;
     private long serverEpoch;
 
-    private final DefaultListModel<String> membersModel = new DefaultListModel<>();
+    private  final DefaultListModel<String> membersModel;
     private final JLabel info = new JLabel(" ");
     private final JPanel colorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
     private final JPanel selectPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -29,16 +30,44 @@ public class GameFrame extends JFrame {
     private final java.util.List<String> selected = new ArrayList<>();
     private javax.swing.Timer hideTimer, countTimer;
 
-    public GameFrame(NetClient net) {
-        super("Đang chơi");
+    private final DefaultTableModel tableModel;
+    private final JTable table;
+    private final List<String> players;
+
+    public GameFrame(String username, List<String> players, NetClient net, DefaultListModel<String> membersModel) {
+        super(username + " đang chơi");
         this.net = net;
+        this.players = players;
+        this.membersModel = membersModel;
         setSize(800, 520); setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        JList<String> members = new JList<>(membersModel);
         JPanel left = new JPanel(new BorderLayout());
         left.add(new JLabel("Người chơi"), BorderLayout.NORTH);
-        left.add(new JScrollPane(members), BorderLayout.CENTER);
+
+        String[] columns = {"Username", "Total Score", "Total Time (ms)"};
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // make table read-only
+            }
+        };
+
+        table = new JTable(tableModel);
+        table.setRowHeight(25);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        left.add(new JScrollPane(table), BorderLayout.CENTER);
+        left.setPreferredSize(new Dimension(300, 0)); // fixed width for left side
+
+        for(String player: players) {
+            tableModel.addRow(new Object[]{player, 0, 0});
+        }
+
+
+//        JList<String> members = new JList<>(membersModel);
+//        left.add(new JScrollPane(members), BorderLayout.CENTER);
 
         JPanel right = new JPanel(new BorderLayout(5,5));
         JPanel top = new JPanel(new BorderLayout());
@@ -72,6 +101,18 @@ public class GameFrame extends JFrame {
             ms.forEach(membersModel::addElement);
         });
     }
+
+//    public void updateRank(List<Map<String, Object>> leaderboard) {
+//        SwingUtilities.invokeLater(() -> {
+//            tableModel.setRowCount(0); // clear existing rows
+//            for (Map<String, Object> r : leaderboard) {
+//                String username = String.valueOf(r.getOrDefault("username", "?"));
+//                Object score = r.getOrDefault("totalScore", 0);
+//                Object time = r.getOrDefault("totalTimeMs", 0);
+//                tableModel.addRow(new Object[]{username, score, time});
+//            }
+//        });
+//    }
 
     public void onRoundData(long matchId, int roundNo, String level, List<String> colors,
                             int showMs, int countdownMs, long serverEpoch) {
@@ -117,9 +158,14 @@ public class GameFrame extends JFrame {
                 long elapsed = System.currentTimeMillis() - start;
                 long left = countdownMs - elapsed;
                 timerLabel.setText("Còn: " + Math.max(0, left/1000.0) + "s");
-                if (left <= 0) countTimer.stop();
+                if (left <= 0) {
+                    countTimer.stop();
+                    submitBtn.addActionListener(e -> submit());
+                }
             });
             countTimer.start();
+
+
 
             revalidate(); repaint();
         });
@@ -137,6 +183,19 @@ public class GameFrame extends JFrame {
             submitBtn.setEnabled(false);
         } catch (Exception ignored) {}
     }
+
+    public void updateRank(List<Map<String, Object>> leaderboard) {
+        SwingUtilities.invokeLater(() -> {
+            tableModel.setRowCount(0); // clear existing rows
+            for (Map<String, Object> r : leaderboard) {
+                String username = String.valueOf(r.getOrDefault("username", "?"));
+                Object score = r.getOrDefault("totalScore", 0);
+                Object time = r.getOrDefault("totalTimeMs", 0);
+                tableModel.addRow(new Object[]{username, score, time});
+            }
+        });
+    }
+
 
     public void onRoundResult(Map<String,Object> payload) {
         SwingUtilities.invokeLater(() -> {
