@@ -19,7 +19,8 @@ public class ClientApp {
     private GameFrame game;
     private HomeFrame homeFrame;
     private User user;
-    private PlayedHistory playedHistory;
+    private PlayedHistoryFrame playedHistoryFrame;
+    private LeaderboardMainFrame leaderboardFrame;
 
     public void start() throws Exception {
         SwingUtilities.invokeLater(() -> {
@@ -36,8 +37,32 @@ public class ClientApp {
     private void onMessage(Message m) {
         switch (m.type) {
             case "PLAYED_HISTORY_RESPONSE":
-                Object object = m.payload.get("history");
-
+                Object historyData = m.payload.get("history");
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        if (playedHistoryFrame == null) {
+                            playedHistoryFrame = new PlayedHistoryFrame(net, user);
+                        }
+                        playedHistoryFrame.updateHistoryTable(historyData);
+                        playedHistoryFrame.setVisible(true);
+                    } catch (Exception e) {
+                        JOptionPane.showMessageDialog(null, "Lỗi hiển thị lịch sử: " + e.getMessage());
+                    }
+                });
+                break;
+            case "LEADERBOARD_RESPONSE":
+                Object leaderboardData = m.payload.get("leaderboard");
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        if (leaderboardFrame == null) {
+                            leaderboardFrame = new LeaderboardMainFrame(net, user);
+                        }
+                        leaderboardFrame.updateLeaderboard(leaderboardData);
+                        leaderboardFrame.setVisible(true);
+                    } catch (Exception e) {
+                        JOptionPane.showMessageDialog(null, "Lỗi hiển thị bảng xếp hạng: " + e.getMessage());
+                    }
+                });
                 break;
             case "LOGIN_OK" :
                 String u = (String)m.payload.get("username");

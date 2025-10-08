@@ -10,45 +10,35 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-public class PlayedHistory extends JFrame {
-    private NetClient client;
-    private User user;
-    public PlayedHistory(NetClient netClient, User user) throws IOException {
-        setTitle("Match Table Example");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(500, 300);
+public class PlayedHistoryFrame extends JFrame {
+    private DefaultTableModel tableModel;
+    private JTable table;
+    
+    public PlayedHistoryFrame(NetClient netClient, User user) throws IOException {
+        
+        setTitle("Lịch sử chơi game");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(600, 400);
         setLocationRelativeTo(null);
 
         // Table data
-        Object[][] data = {
-                {"M001"},
-                {"M002"},
-                {"M003"},
-                {"M004"}
-        };
-        String[] columnNames = {"match_id", "action"};
-
-        Map<String, Object> ob = new HashMap<>();
-        ob.put("username", user.getUsername());
-        netClient.send(
-                "PLAYED_HISTORY",
-                ob
-        );
+        Object[][] data = {};
+        String[] columnNames = {"Match ID", "Thao tác"};
 
         // Create table model
-        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+        tableModel = new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return column == 1; // Only "action" column is editable
             }
         };
 
-        JTable table = new JTable(model);
+        table = new JTable(tableModel);
         table.setRowHeight(30);
 
         // Add button renderer and editor for the "action" column
-        table.getColumn("action").setCellRenderer(new ButtonRenderer());
-        table.getColumn("action").setCellEditor(new ButtonEditor(new JCheckBox()));
+        table.getColumn("Thao tác").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Thao tác").setCellEditor(new ButtonEditor(new JCheckBox()));
 
         // Scroll pane
         JScrollPane scrollPane = new JScrollPane(table);
@@ -70,8 +60,46 @@ public class PlayedHistory extends JFrame {
     }
 
 
-    public void updateHistoryTable() {
-
+    @SuppressWarnings("unchecked")
+    public void updateHistoryTable(Object history) {
+        // Clear existing data
+        tableModel.setRowCount(0);
+        
+        if (history == null) {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu lịch sử");
+            return;
+        }
+        
+        try {
+            // Parse history data - expecting List<Map<String, Object>>
+            if (history instanceof List) {
+                List<Map<String, Object>> historyList = (List<Map<String, Object>>) history;
+                
+                if (historyList.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Bạn chưa chơi trận nào");
+                    return;
+                }
+                
+                // Add each match to the table
+                for (Map<String, Object> match : historyList) {
+                    Object matchId = match.get("match_id");
+                    if (matchId == null) {
+                        matchId = match.get("matchId");
+                    }
+                    
+                    // Add row with match_id and a placeholder for the button column
+                    tableModel.addRow(new Object[]{
+                        matchId != null ? matchId.toString() : "N/A",
+                        "View Detail" // This will be rendered as a button
+                    });
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Dữ liệu lịch sử không hợp lệ");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi hiển thị lịch sử: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     // Button Editor
     class ButtonEditor extends DefaultCellEditor {
@@ -152,7 +180,4 @@ public class PlayedHistory extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new PlayedHistory().setVisible(true));
-    }
 }

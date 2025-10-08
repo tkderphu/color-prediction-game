@@ -42,10 +42,11 @@ public class HomeFrame extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(255, 204, 204));
-        setPreferredSize(new java.awt.Dimension(800, 500));
+        setPreferredSize(new java.awt.Dimension(800, 600));
 
         jLabel1.setBackground(new java.awt.Color(255, 255, 255));
         jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -61,6 +62,16 @@ public class HomeFrame extends javax.swing.JFrame {
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
+            }
+        });
+
+        jButton2.setBackground(new java.awt.Color(0, 102, 102));
+        jButton2.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        jButton2.setForeground(new java.awt.Color(255, 255, 255));
+        jButton2.setText("Bảng xếp hạng");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
             }
         });
 
@@ -86,6 +97,7 @@ public class HomeFrame extends javax.swing.JFrame {
                                 .addGap(173, 173, 173)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                         .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addContainerGap(149, Short.MAX_VALUE))
                         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -100,9 +112,11 @@ public class HomeFrame extends javax.swing.JFrame {
                                 .addComponent(jLabel1)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(jLabel2)
-                                .addGap(57, 57, 57)
+                                .addGap(40, 40, 40)
                                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(38, 38, 38)
+                                .addGap(28, 28, 28)
+                                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(28, 28, 28)
                                 .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap(138, Short.MAX_VALUE))
         );
@@ -111,7 +125,24 @@ public class HomeFrame extends javax.swing.JFrame {
     }// </editor-fold>
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
-        JOptionPane.showMessageDialog(this, "Chức năng lịch sử chưa implement!");
+        try {
+            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+            payload.put("username", user.getUsername());
+            netClient.send("PLAYED_HISTORY", payload);
+            // Frame sẽ được hiển thị khi nhận được response từ server
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi lấy lịch sử: " + e.getMessage());
+        }
+    }
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
+        try {
+            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+            netClient.send("LEADERBOARD", payload);
+            // Frame sẽ được hiển thị khi nhận được response từ server
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi lấy bảng xếp hạng: " + e.getMessage());
+        }
     }
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
@@ -121,6 +152,7 @@ public class HomeFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
