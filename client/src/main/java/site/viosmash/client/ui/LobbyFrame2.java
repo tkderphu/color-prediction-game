@@ -21,7 +21,6 @@ public class LobbyFrame2 extends JFrame {
     private JList<User> onlineList;
     private JList<String> acceptedList;
 
-
     public LobbyFrame2(NetClient net, User user) {
         this.net = net;
         this.user = user;
@@ -32,10 +31,7 @@ public class LobbyFrame2 extends JFrame {
         setLocationRelativeTo(null);
     }
 
-
-
-
-    public void onOnlineList(java.util.List<Map<String,Object>> players) {
+    public void onOnlineList(java.util.List<Map<String, Object>> players) {
         SwingUtilities.invokeLater(() -> {
             try {
                 Thread.sleep(1000);
@@ -44,12 +40,13 @@ public class LobbyFrame2 extends JFrame {
             }
             onlineModel.clear();
             for (Map<String, Object> p : players) {
-                String u = (String)p.get("username");
-                String st = (String)p.get("status");
+                String u = (String) p.get("username");
+                String st = (String) p.get("status");
                 User user = new User();
                 user.setUsername(u);
                 user.setStatus(st);
-                if (!u.equals(this.user.getUsername())) onlineModel.addElement(user);
+                if (!u.equals(this.user.getUsername()))
+                    onlineModel.addElement(user);
             }
         });
     }
@@ -57,14 +54,15 @@ public class LobbyFrame2 extends JFrame {
     public void onRoomUpdate(String owner, List<String> members) {
         SwingUtilities.invokeLater(() -> {
             acceptedModel.clear();
-            for (String m : members) acceptedModel.addElement(m);
+            for (String m : members)
+                acceptedModel.addElement(m);
         });
     }
 
     public void onInviteIncoming(NetClient net, String from) {
         SwingUtilities.invokeLater(() -> {
             int res = JOptionPane.showConfirmDialog(this,
-                    "Bạn có nhận lời mời từ "+from+" không?", "Mời chơi",
+                    "Bạn có nhận lời mời từ " + from + " không?", "Mời chơi",
                     JOptionPane.YES_NO_OPTION);
             boolean accepted = (res == JOptionPane.YES_OPTION);
             try {
@@ -72,13 +70,10 @@ public class LobbyFrame2 extends JFrame {
                 payload.put("fromUsername", from);
                 payload.put("accepted", accepted);
                 net.send("INVITE_RESPONSE", payload);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         });
     }
-
-
-
-
 
     private void initComponents() {
         setPreferredSize(new Dimension(900, 600));
@@ -123,15 +118,16 @@ public class LobbyFrame2 extends JFrame {
 
         inviteBtn.addActionListener(e -> {
             User user = onlineList.getSelectedValue();
-            if (user == null) return;
+            if (user == null)
+                return;
             try {
                 java.util.Map<String, Object> payload = new java.util.HashMap<>();
                 String username = user.getUsername();
                 payload.put("toUsername", username);
                 net.send("INVITE", payload);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         });
-
 
         refreshButton.addActionListener(e -> {
             System.out.println("Manual refresh - User: " + user.getUsername());
@@ -157,8 +153,6 @@ public class LobbyFrame2 extends JFrame {
 
         return rightPanel;
     }
-
-
 
     @Override
     public void dispose() {
@@ -192,8 +186,8 @@ public class LobbyFrame2 extends JFrame {
 
         @Override
         public Component getListCellRendererComponent(JList<? extends User> list,
-                                                      User user, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
+                User user, int index,
+                boolean isSelected, boolean cellHasFocus) {
             if (user != null) {
                 nameLabel.setText(user.getUsername());
                 statusLabel.setText("      " + (user.getStatus() != null ? user.getStatus() : "free"));
