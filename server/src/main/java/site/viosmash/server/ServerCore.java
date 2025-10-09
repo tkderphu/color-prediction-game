@@ -4,6 +4,7 @@ package site.viosmash.server;
 import com.fasterxml.jackson.core.type.TypeReference;
 import site.viosmash.common.Json;
 import site.viosmash.common.Message;
+import site.viosmash.server.dao.HistoryPlayedDao;
 import site.viosmash.server.dao.MatchDao;
 import site.viosmash.server.dao.UserDao;
 
@@ -18,7 +19,7 @@ public class ServerCore {
     public final Lobby lobby = new Lobby();
     public final UserDao userDao = new UserDao();
     public final MatchDao matchDao = new MatchDao();
-//    public final MatchHistoryDao matchHistoryDao = new MatchHistoryDao();
+    public final HistoryPlayedDao historyPlayedDao = new HistoryPlayedDao();
     // Trạng thái trận đang diễn ra: matchId -> context
     private final Map<Long, MatchContext> matches = new ConcurrentHashMap<>();
 
@@ -189,14 +190,26 @@ public class ServerCore {
     }
 
     public void handleHistory(ClientHandler h, Message m) throws Exception {
+        String username = h.getUsername();
+        if (username == null) {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("items", new ArrayList<Object>());
+            h.send("HISTORY_RESPONSE", payload);
+            return;
+        }
+        
+        // Lấy lịch sử trận đấu của người chơi
+        List<Map<String, Object>> history = historyPlayedDao.getPlayerMatchHistory(username);
         Map<String, Object> payload = new HashMap<>();
-        payload.put("items", new ArrayList<Object>());
+        payload.put("history", history);
         h.send("HISTORY_RESPONSE", payload);
     }
 
     public void handleLeaderboard(ClientHandler h, Message m) throws Exception {
+        // Lấy bảng xếp hạng toàn cục
+        List<Map<String, Object>> leaderboard = historyPlayedDao.getGlobalLeaderboard();
         Map<String, Object> payload = new HashMap<>();
-        payload.put("items", new ArrayList<Object>());
+        payload.put("leaderboard", leaderboard);
         h.send("LEADERBOARD_RESPONSE", payload);
     }
 
