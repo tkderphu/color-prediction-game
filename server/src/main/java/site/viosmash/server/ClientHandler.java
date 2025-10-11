@@ -79,23 +79,23 @@ public class ClientHandler implements Runnable {
             case "LEADERBOARD_REQUEST":
                 core.handleLeaderboard(this, m);
                 break;
+            case "MATCH_LEADERBOARD_REQUEST":
+                core.handleMatchLeaderboard(this, m);
+                break;
             default:
                 sendError("UNKNOWN_TYPE", "Unknown message type: " + m.type);
                 break;
         }
     }
 
-    private void handlePlayedHistory(Message m) throws IOException {
-        //lay danh sach lich su
-        Object object = m.payload.get("username");
-//        List<MatchHistory> list;
-        Map<String, Object> map= new HashMap<>();
-//        map.put("data", list);
-        send(
-                "PLAYED_HISTORY_RESPONSE",
-                map
-        );
-
+    private void handlePlayedHistory(Message m) throws Exception {
+        requireLogin();
+        // Lấy danh sách lịch sử trận đấu của người chơi hiện tại
+        List<Map<String, Object>> history = core.historyPlayedDao.getPlayerMatchHistory(username);
+        
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("history", history);
+        send("PLAYED_HISTORY_RESPONSE", payload);
     }
 
     private void handleLogin(Message m) throws Exception {
