@@ -213,6 +213,23 @@ public class ServerCore {
         h.send("LEADERBOARD_RESPONSE", payload);
     }
 
+    public void handleMatchLeaderboard(ClientHandler h, Message m) throws Exception {
+        // Lấy bảng xếp hạng của một match cụ thể
+        Object matchIdObj = m.payload.get("matchId");
+        if (matchIdObj == null) {
+            h.sendError("MISSING_MATCH_ID", "matchId is required");
+            return;
+        }
+        
+        long matchId = ((Number) matchIdObj).longValue();
+        List<Map<String, Object>> leaderboard = historyPlayedDao.getMatchDetails(matchId);
+        
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("matchId", matchId);
+        payload.put("leaderboard", leaderboard);
+        h.send("MATCH_LEADERBOARD_RESPONSE", payload);
+    }
+
     // --- Helper classes ---
     public static class RoundSpec {
         public final String level;

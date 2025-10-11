@@ -79,6 +79,9 @@ public class ClientHandler implements Runnable {
             case "LEADERBOARD_REQUEST":
                 core.handleLeaderboard(this, m);
                 break;
+            case "MATCH_LEADERBOARD_REQUEST":
+                core.handleMatchLeaderboard(this, m);
+                break;
             default:
                 sendError("UNKNOWN_TYPE", "Unknown message type: " + m.type);
                 break;

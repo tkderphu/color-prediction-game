@@ -64,6 +64,14 @@ public class ClientApp {
                     }
                 });
                 break;
+            case "MATCH_LEADERBOARD_RESPONSE":
+                Object matchIdObj = m.payload.get("matchId");
+                Object matchLeaderboardData = m.payload.get("leaderboard");
+                if (matchIdObj != null) {
+                    String matchId = matchIdObj.toString();
+                    PlayedHistoryFrame.handleLeaderboardResponse(matchId, matchLeaderboardData);
+                }
+                break;
             case "LOGIN_OK" :
                 String u = (String)m.payload.get("username");
                 String st = (String)m.payload.get("status");

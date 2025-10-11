@@ -13,8 +13,14 @@ import java.util.List;
 public class PlayedHistoryFrame extends JFrame {
     private DefaultTableModel tableModel;
     private JTable table;
+    private NetClient netClient;
+    private User user;
+    // Track open leaderboard frames by matchId
+    private static final Map<String, LeaderboardFrame> openLeaderboards = new HashMap<>();
     
     public PlayedHistoryFrame(NetClient netClient, User user) throws IOException {
+        this.netClient = netClient;
+        this.user = user;
         
         setTitle("Lịch sử chơi game");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -101,6 +107,17 @@ public class PlayedHistoryFrame extends JFrame {
             e.printStackTrace();
         }
     }
+    
+    /**
+     * Public method to handle leaderboard response from server
+     */
+    public static void handleLeaderboardResponse(String matchId, Object leaderboardData) {
+        LeaderboardFrame frame = openLeaderboards.get(matchId);
+        if (frame != null) {
+            SwingUtilities.invokeLater(() -> frame.updateLeaderboard(leaderboardData));
+        }
+    }
+    
     // Button Editor
     class ButtonEditor extends DefaultCellEditor {
         private JButton button;
@@ -125,7 +142,15 @@ public class PlayedHistoryFrame extends JFrame {
         @Override
         public Object getCellEditorValue() {
             if (clicked) {
-                new LeaderboardFrame(matchId).setVisible(true);
+                // Close existing leaderboard for this match if any
+                LeaderboardFrame existing = openLeaderboards.get(matchId);
+                if (existing != null) {
+                    existing.dispose();
+                }
+                // Create and show new leaderboard frame
+                LeaderboardFrame frame = new LeaderboardFrame(matchId, netClient);
+                openLeaderboards.put(matchId, frame);
+                frame.setVisible(true);
             }
             clicked = false;
             return "View Detail";
@@ -139,44 +164,99 @@ public class PlayedHistoryFrame extends JFrame {
     }
 
     // Separate UI for displaying leaderboard
-    static class LeaderboardFrame extends JFrame {
-        public LeaderboardFrame(String matchId) {
-            setTitle("Leaderboard - Match " + matchId);
-            setSize(400, 300);
+    class LeaderboardFrame extends JFrame {
+        private DefaultTableModel leaderboardTableModel;
+        private JTable leaderboardTable;
+        private String matchId;
+        
+        public LeaderboardFrame(String matchId, NetClient netClient) {
+            this.matchId = matchId;
+            setTitle("Bảng xếp hạng - Match " + matchId);
+            setSize(500, 400);
             setLocationRelativeTo(null);
+            setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            
+            // Remove from map when closed
+            addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent e) {
+                    openLeaderboards.remove(matchId);
+                }
+            });
 
-            // Dummy leaderboard data (you can replace with DB query)
-            String[] columnNames = {"Rank", "Player Name", "Score"};
-            Object[][] leaderboardData = getLeaderboardData(matchId);
+            // Create table model
+            String[] columnNames = {"Hạng", "Tên người chơi", "Điểm", "Thời gian (ms)"};
+            leaderboardTableModel = new DefaultTableModel(columnNames, 0) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false; // read-only
+                }
+            };
 
-            JTable leaderboardTable = new JTable(leaderboardData, columnNames);
+            leaderboardTable = new JTable(leaderboardTableModel);
             leaderboardTable.setRowHeight(25);
-            leaderboardTable.setEnabled(false); // read-only
 
             JScrollPane scrollPane = new JScrollPane(leaderboardTable);
             add(scrollPane, BorderLayout.CENTER);
+            
+            // Add loading label
+            JLabel loadingLabel = new JLabel("Đang tải dữ liệu...", SwingConstants.CENTER);
+            add(loadingLabel, BorderLayout.NORTH);
+
+            // Request leaderboard data from server
+            try {
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("matchId", Long.parseLong(matchId));
+                netClient.send("MATCH_LEADERBOARD_REQUEST", payload);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Lỗi khi yêu cầu dữ liệu: " + e.getMessage(),
+                    "Lỗi", 
+                    JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
         }
-
-        private Object[][] getLeaderboardData(String matchId) {
-            // Mock data - you can replace this with DB logic later
-            Random random = new Random(matchId.hashCode());
-            List<Object[]> rows = new ArrayList<>();
-
-            for (int i = 1; i <= 5; i++) {
-                rows.add(new Object[]{
-                        i, // rank
-                        "Player_" + i,
-                        50 + random.nextInt(50) // random score
-                });
+        
+        @SuppressWarnings("unchecked")
+        public void updateLeaderboard(Object leaderboardData) {
+            // Clear existing data
+            leaderboardTableModel.setRowCount(0);
+            
+            try {
+                if (leaderboardData instanceof List) {
+                    List<Map<String, Object>> leaderboard = (List<Map<String, Object>>) leaderboardData;
+                    
+                    if (leaderboard.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "Không có dữ liệu xếp hạng");
+                        return;
+                    }
+                    
+                    // Add each player to the table
+                    for (Map<String, Object> player : leaderboard) {
+                        Object rank = player.get("rank");
+                        Object username = player.get("username");
+                        Object score = player.get("total_score");
+                        if (score == null) score = player.get("totalScore");
+                        Object timeMs = player.get("total_time_ms");
+                        if (timeMs == null) timeMs = player.get("totalTimeMs");
+                        
+                        leaderboardTableModel.addRow(new Object[]{
+                            rank != null ? rank.toString() : "N/A",
+                            username != null ? username.toString() : "N/A",
+                            score != null ? String.format("%.2f", ((Number)score).doubleValue()) : "0.00",
+                            timeMs != null ? timeMs.toString() : "0"
+                        });
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "Dữ liệu xếp hạng không hợp lệ");
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Lỗi khi hiển thị xếp hạng: " + e.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
             }
-
-            // Sort descending by score
-            rows.sort((a, b) -> ((Integer) b[2]) - ((Integer) a[2]));
-            for (int i = 0; i < rows.size(); i++) {
-                rows.get(i)[0] = i + 1; // update rank
-            }
-
-            return rows.toArray(new Object[0][]);
         }
     }
 
