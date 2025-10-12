@@ -6,6 +6,7 @@ import site.viosmash.common.Message;
 
 import java.io.*;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +53,9 @@ public class ClientHandler implements Runnable {
 
     private void handle(Message m) throws Exception {
         switch (m.type) {
+            case "MATCH_DETAIL":
+                handleMatchDetail(m);
+                break;
             case "PLAYED_HISTORY":
                 handlePlayedHistory(m);
                 break;
@@ -85,12 +89,26 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void handlePlayedHistory(Message m) throws IOException {
+    private void handleMatchDetail(Message m) {
+        long matcId = (long) m.payload.get("matchId");
+
+        try {
+            List<Map<String, Object>> maps = core.matchDao.finalRanking(matcId);
+            Map<String, Object> map = new HashMap<>();
+            map.put("leaderboard", maps);
+            map.put("matchId", matcId);
+            send("MATCH_DETAIL_RESPONSE", map);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void handlePlayedHistory(Message m) throws IOException, SQLException {
         //lay danh sach lich su
-        Object object = m.payload.get("username");
-//        List<MatchHistory> list;
-        Map<String, Object> map= new HashMap<>();
-//        map.put("data", list);
+        String username = (String) m.payload.get("username");
+        List<Map<String, Object>> listMatchPlayed = core.matchDao.getListMatchPlayed(username);
+        Map<String, Object> map = new HashMap<>();
+        map.put("matchsPlayed", listMatchPlayed);
         send(
                 "PLAYED_HISTORY_RESPONSE",
                 map

@@ -8,6 +8,7 @@ import site.viosmash.client.utils.User;
 import site.viosmash.common.Message;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,7 @@ public class ClientApp {
     private HomeFrame homeFrame;
     private User user;
     private PlayedHistory playedHistory;
-
+    private LeaderboardFrame leaderboardFrame;
     public void start() throws Exception {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -35,9 +36,21 @@ public class ClientApp {
 
     private void onMessage(Message m) {
         switch (m.type) {
+            case "MATCH_DETAIL_RESPONSE":
+                List<Map<String, Object>> leaderboardObject = (List<Map<String, Object>>) m.payload.get("leaderboard");
+                leaderboardFrame = new LeaderboardFrame(
+                        (Long) m.payload.get("matchId"),
+                        leaderboardObject
+                );
+                break;
             case "PLAYED_HISTORY_RESPONSE":
-                Object object = m.payload.get("history");
-
+                List<Map<String, Object>> object = (List<Map<String, Object>>) m.payload.get("matchsPlayed");
+                try {
+                    playedHistory = new PlayedHistory(net, object);
+                    playedHistory.setVisible(true);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
             case "LOGIN_OK" :
                 String u = (String)m.payload.get("username");

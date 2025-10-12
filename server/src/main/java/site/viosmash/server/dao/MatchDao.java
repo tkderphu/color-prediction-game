@@ -82,6 +82,30 @@ public class MatchDao {
             ps.executeUpdate();
         }
     }
+
+    
+    public List<Map<String, Object>> getListMatchPlayed(String username) throws SQLException {
+        try (Connection c = Db.get();
+             PreparedStatement ps = c.prepareStatement(
+                     "SELECT m.id as id, m.room_owner as room_owner, m.started_at as started_at FROM match_players mp INNER JOIN matches m " +
+                             "ON mp.match_id = m.id " +
+                             "WHERE mp.username = ? ORDER BY started_at DESC")) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<Map<String,Object>> out = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String,Object> m = new HashMap<>();
+                    m.put("id", rs.getLong(1));
+                    m.put("room_owner", rs.getString(2));
+                    m.put("started_at", rs.getTimestamp(3));
+                    out.add(m);
+                }
+                return out;
+            }
+        }
+    }
+
+
     public List<Map<String,Object>> finalRanking(long matchId) throws Exception {
         try (Connection c = Db.get();
              PreparedStatement ps = c.prepareStatement(

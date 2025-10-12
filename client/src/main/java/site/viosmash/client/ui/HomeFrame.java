@@ -2,8 +2,12 @@ package site.viosmash.client.ui;
 
 import site.viosmash.client.NetClient;
 import site.viosmash.client.utils.User;
+import site.viosmash.common.Message;
 
 import javax.swing.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HomeFrame extends javax.swing.JFrame {
 
@@ -68,9 +72,13 @@ public class HomeFrame extends javax.swing.JFrame {
         jButton3.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         jButton3.setForeground(new java.awt.Color(255, 255, 255));
         jButton3.setText("Chơi game");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
+        jButton3.addActionListener((e) -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("username", user.getUsername());
+            try {
+                netClient.send("PLAYED_HISTORY", map);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         });
 

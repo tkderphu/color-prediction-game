@@ -13,82 +13,100 @@ import java.util.List;
 public class PlayedHistory extends JFrame {
     private NetClient client;
     private User user;
-    public PlayedHistory(NetClient netClient, User user) throws IOException {
-        setTitle("Match Table Example");
+    private DefaultTableModel model;
+    private JTable table;
+
+    public PlayedHistory(NetClient netClient, List<Map<String, Object>> histories) throws IOException {
+        this.client = netClient;
+        setTitle("Played Match History");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(500, 300);
+        setSize(700, 400);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        // Table data
-        Object[][] data = {
-                {"M001"},
-                {"M002"},
-                {"M003"},
-                {"M004"}
-        };
-        String[] columnNames = {"match_id", "action"};
+        // --- Table columns ---
+        String[] columnNames = {"Match ID", "Room Owner", "Started At", "Action"};
 
-        Map<String, Object> ob = new HashMap<>();
-        ob.put("username", user.getUsername());
-        netClient.send(
-                "PLAYED_HISTORY",
-                ob
-        );
-
-        // Create table model
-        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+        // --- Table model ---
+        model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 1; // Only "action" column is editable
+                // Only the "Action" column is editable (for button)
+                return column == 3;
             }
         };
 
-        JTable table = new JTable(model);
-        table.setRowHeight(30);
+        // --- Table setup ---
+        table = new JTable(model);
+        table.setRowHeight(28);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
 
-        // Add button renderer and editor for the "action" column
-        table.getColumn("action").setCellRenderer(new ButtonRenderer());
-        table.getColumn("action").setCellEditor(new ButtonEditor(new JCheckBox()));
+        // --- Populate data ---
+        if (histories != null) {
+            for (Map<String, Object> history : histories) {
+                model.addRow(new Object[]{
+                        history.getOrDefault("id", "N/A"),
+                        history.getOrDefault("room_owner", "Unknown"),
+                        history.getOrDefault("started_at", "Unknown"),
+                        "View Detail"
+                });
+            }
+        }
 
-        // Scroll pane
+        // --- Button Renderer & Editor ---
+        table.getColumn("Action").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Action").setCellEditor(new ButtonEditor(new JCheckBox(), netClient));
+
+        // --- Scroll pane ---
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    // Button Renderer
+    /** Re-render table if histories updated dynamically */
+    public void updateHistoryTable(List<Map<String, Object>> newHistories) {
+        model.setRowCount(0); // Clear table
+        for (Map<String, Object> history : newHistories) {
+            model.addRow(new Object[]{
+                    history.getOrDefault("id", "N/A"),
+                    history.getOrDefault("room_owner", "Unknown"),
+                    history.getOrDefault("started_at", "Unknown"),
+                    "View Detail"
+            });
+        }
+    }
+
+    // --- Button Renderer ---
     class ButtonRenderer extends JButton implements TableCellRenderer {
         public ButtonRenderer() {
-            setText("View Detail");
+            setOpaque(true);
         }
 
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus,
-                                                       int row, int column) {
+        public Component getTableCellRendererComponent(
+                JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            setText(value == null ? "View Detail" : value.toString());
             return this;
         }
     }
 
-
-    public void updateHistoryTable() {
-
-    }
-    // Button Editor
+    // --- Button Editor ---
     class ButtonEditor extends DefaultCellEditor {
-        private JButton button;
+        private final JButton button;
         private String matchId;
         private boolean clicked;
-
-        public ButtonEditor(JCheckBox checkBox) {
+        private NetClient netClient;
+        public ButtonEditor(JCheckBox checkBox, NetClient netClient) {
             super(checkBox);
             button = new JButton("View Detail");
             button.setOpaque(true);
+            this.netClient = netClient;
             button.addActionListener(e -> fireEditingStopped());
         }
 
         @Override
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                                                     boolean isSelected, int row, int column) {
+        public Component getTableCellEditorComponent(
+                JTable table, Object value, boolean isSelected, int row, int column) {
             matchId = (String) table.getValueAt(row, 0);
             clicked = true;
             return button;
@@ -97,7 +115,14 @@ public class PlayedHistory extends JFrame {
         @Override
         public Object getCellEditorValue() {
             if (clicked) {
-                new LeaderboardFrame(matchId).setVisible(true);
+                Map<String, Object> map = new HashMap<>();
+                map.put("matchId", matchId);
+                try {
+                    netClient.send("MATCH_DETAIL", map);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+//                new LeaderboardFrame(matchId).setVisible(true);
             }
             clicked = false;
             return "View Detail";
@@ -110,49 +135,37 @@ public class PlayedHistory extends JFrame {
         }
     }
 
-    // Separate UI for displaying leaderboard
-    static class LeaderboardFrame extends JFrame {
-        public LeaderboardFrame(String matchId) {
-            setTitle("Leaderboard - Match " + matchId);
-            setSize(400, 300);
-            setLocationRelativeTo(null);
+    // --- Separate Leaderboard Window ---
 
-            // Dummy leaderboard data (you can replace with DB query)
-            String[] columnNames = {"Rank", "Player Name", "Score"};
-            Object[][] leaderboardData = getLeaderboardData(matchId);
-
-            JTable leaderboardTable = new JTable(leaderboardData, columnNames);
-            leaderboardTable.setRowHeight(25);
-            leaderboardTable.setEnabled(false); // read-only
-
-            JScrollPane scrollPane = new JScrollPane(leaderboardTable);
-            add(scrollPane, BorderLayout.CENTER);
-        }
-
-        private Object[][] getLeaderboardData(String matchId) {
-            // Mock data - you can replace this with DB logic later
-            Random random = new Random(matchId.hashCode());
-            List<Object[]> rows = new ArrayList<>();
-
-            for (int i = 1; i <= 5; i++) {
-                rows.add(new Object[]{
-                        i, // rank
-                        "Player_" + i,
-                        50 + random.nextInt(50) // random score
-                });
-            }
-
-            // Sort descending by score
-            rows.sort((a, b) -> ((Integer) b[2]) - ((Integer) a[2]));
-            for (int i = 0; i < rows.size(); i++) {
-                rows.get(i)[0] = i + 1; // update rank
-            }
-
-            return rows.toArray(new Object[0][]);
-        }
-    }
-
+    // --- For quick testing ---
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new PlayedHistory().setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            try {
+                List<Map<String, Object>> mockHistories = new ArrayList<>();
+
+                Map<String, Object> m1 = new HashMap<>();
+                m1.put("id", 1);
+                m1.put("room_owner", "Alice");
+                m1.put("started_at", "2025-10-10 15:30");
+                mockHistories.add(m1);
+
+                Map<String, Object> m2 = new HashMap<>();
+                m2.put("id", 2);
+                m2.put("room_owner", "Bob");
+                m2.put("started_at", "2025-10-11 12:00");
+                mockHistories.add(m2);
+
+                Map<String, Object> m3 = new HashMap<>();
+                m3.put("id", 3);
+                m3.put("room_owner", "Charlie");
+                m3.put("started_at", "2025-10-12 09:15");
+                mockHistories.add(m3);
+
+                new PlayedHistory(null, mockHistories).setVisible(true);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
+
 }
