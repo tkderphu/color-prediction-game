@@ -19,7 +19,7 @@ public class PlayedHistory extends JFrame {
     public PlayedHistory(NetClient netClient, List<Map<String, Object>> histories) throws IOException {
         this.client = netClient;
         setTitle("Played Match History");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(700, 400);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -93,7 +93,7 @@ public class PlayedHistory extends JFrame {
     // --- Button Editor ---
     class ButtonEditor extends DefaultCellEditor {
         private final JButton button;
-        private String matchId;
+        private int matchId;
         private boolean clicked;
         private NetClient netClient;
         public ButtonEditor(JCheckBox checkBox, NetClient netClient) {
@@ -107,7 +107,7 @@ public class PlayedHistory extends JFrame {
         @Override
         public Component getTableCellEditorComponent(
                 JTable table, Object value, boolean isSelected, int row, int column) {
-            matchId = (String) table.getValueAt(row, 0);
+            matchId = (int) table.getValueAt(row, 0);
             clicked = true;
             return button;
         }

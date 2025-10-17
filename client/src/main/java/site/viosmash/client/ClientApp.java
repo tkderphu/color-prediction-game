@@ -39,9 +39,10 @@ public class ClientApp {
             case "MATCH_DETAIL_RESPONSE":
                 List<Map<String, Object>> leaderboardObject = (List<Map<String, Object>>) m.payload.get("leaderboard");
                 leaderboardFrame = new LeaderboardFrame(
-                        (Long) m.payload.get("matchId"),
+                        (int) m.payload.get("matchId"),
                         leaderboardObject
                 );
+                leaderboardFrame.setVisible(true);
                 break;
             case "PLAYED_HISTORY_RESPONSE":
                 List<Map<String, Object>> object = (List<Map<String, Object>>) m.payload.get("matchsPlayed");
@@ -85,14 +86,18 @@ public class ClientApp {
                 break;
             }
             case "ROOM_UPDATE": {
+                if(m.payload.containsKey("userLeave")) {
+                    String userLeave = (String)m.payload.get("userLeave");
+                    if(userLeave.equals(this.user.getUsername())) {
+                        lobby.dispose();
+                        homeFrame.setVisible(true);
+                        return;
+                    }
+                }
                 String owner = (String)m.payload.get("owner");
                 List<String> members = (List<String>) m.payload.get("members");
                 if (lobby != null) {
-                    if(!members.contains(user.getUsername())) {
-                        lobby.onRoomUpdate(owner, new ArrayList<>());
-                    } else {
-                        lobby.onRoomUpdate(owner, members);
-                    }
+                    lobby.onRoomUpdate(owner, members);
                 }
                 if (game != null) game.setMembers(members);
                 break;

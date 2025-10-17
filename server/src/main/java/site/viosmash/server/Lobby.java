@@ -16,6 +16,14 @@ public class Lobby {
     }
     public synchronized void dissolveIfEmpty(String owner) {
         Room r = rooms.get(owner);
-        if (r != null && r.members.isEmpty()) rooms.remove(owner);
+        if (r != null && !r.members.isEmpty()) {
+            for(String member: r.members) {
+                r.owner = member;
+               return;
+            }
+        }
+        if(r != null && r.members.isEmpty()) {
+            rooms.remove(owner);
+        }
     }
 }

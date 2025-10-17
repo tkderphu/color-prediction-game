@@ -197,11 +197,11 @@ public class ClientHandler implements Runnable {
                 break;
             }
         }
-//        theRoom.members.remove(invitedUsername);
-//        sendRoomUpdate(theRoom, invitedUsername);
-//        lobby.dissolveIfEmpty(theRoom.owner);
-
-        room.members.add(username);
+        if(theRoom != null) {
+            theRoom.members.remove(invitedUsername);
+            sendRoomUpdate(theRoom, null);
+        }
+        room.members.add(invitedUsername);
         sendRoomUpdate(room, null);
     }
 
@@ -214,13 +214,15 @@ public class ClientHandler implements Runnable {
                 break;
             }
         }
-        if (theRoom == null) return;
+        if (theRoom == null) {
+           return;
+        };
 
 
 
         theRoom.members.remove(username);
-        sendRoomUpdate(theRoom, username);
         lobby.dissolveIfEmpty(theRoom.owner);
+        sendRoomUpdate(theRoom, username);
     }
 
     private void handleStartGame(Message m) throws Exception {
@@ -279,11 +281,16 @@ public class ClientHandler implements Runnable {
         payload.put("members", new ArrayList<>(room.members));
         for (String u : room.members) {
             ClientHandler h = lobby.online.get(u);
-            if (h != null) h.send("ROOM_UPDATE", payload);
+            if (h != null) {
+                h.send("ROOM_UPDATE", payload);
+            }
         }
-        if(username != null) {
-            ClientHandler h = lobby.online.get(username);
-            if (h != null) h.send("ROOM_UPDATE", payload);
+        if(usernameLeave != null) {
+            payload.put("userLeave", usernameLeave);
+            ClientHandler h = lobby.online.get(usernameLeave);
+            if (h != null) {
+                h.send("ROOM_UPDATE", payload);
+            }
         }
     }
 }

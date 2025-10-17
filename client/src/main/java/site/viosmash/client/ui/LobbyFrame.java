@@ -67,6 +67,9 @@ public class LobbyFrame extends JFrame {
                 payload.put("username", myName);
                 net.send("LEAVE_ROOM", payload);
             } catch (Exception ignored) {}
+            finally {
+                roomModel.clear();
+            }
         });
     }
 

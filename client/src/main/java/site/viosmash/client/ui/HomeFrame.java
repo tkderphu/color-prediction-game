@@ -62,9 +62,13 @@ public class HomeFrame extends javax.swing.JFrame {
         jButton1.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         jButton1.setForeground(new java.awt.Color(255, 255, 255));
         jButton1.setText("Lịch sử chơi game");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+        jButton1.addActionListener((e) -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("username", user.getUsername());
+            try {
+                netClient.send("PLAYED_HISTORY", map);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         });
 
@@ -73,13 +77,7 @@ public class HomeFrame extends javax.swing.JFrame {
         jButton3.setForeground(new java.awt.Color(255, 255, 255));
         jButton3.setText("Chơi game");
         jButton3.addActionListener((e) -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("username", user.getUsername());
-            try {
-                netClient.send("PLAYED_HISTORY", map);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+            jButton3ActionPerformed(e);
         });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
