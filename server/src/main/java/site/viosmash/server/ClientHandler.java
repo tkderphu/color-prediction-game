@@ -90,13 +90,13 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleMatchDetail(Message m) {
-        long matcId = (long) m.payload.get("matchId");
+        int matchId  = (int) m.payload.get("matchId");
 
         try {
-            List<Map<String, Object>> maps = core.matchDao.finalRanking(matcId);
+            List<Map<String, Object>> maps = core.matchDao.finalRanking(matchId);
             Map<String, Object> map = new HashMap<>();
             map.put("leaderboard", maps);
-            map.put("matchId", matcId);
+            map.put("matchId", matchId);
             send("MATCH_DETAIL_RESPONSE", map);
         } catch (Exception e) {
             throw new RuntimeException(e);

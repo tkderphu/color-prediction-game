@@ -43,30 +43,9 @@ public class LeaderboardFrame extends JFrame {
             Map<String, Object> entry = leaderboard.get(i);
             rows[i][0] = i + 1; // rank (already sorted)
             rows[i][1] = entry.getOrDefault("username", "Unknown");
-            rows[i][2] = entry.getOrDefault("total_score", 0);
-            rows[i][3] = entry.getOrDefault("total_time_ms", 0);
+            rows[i][2] = entry.getOrDefault("totalScore", 0);
+            rows[i][3] = entry.getOrDefault("totalTimeMs", 0);
         }
         return rows;
-    }
-
-    // --- Example usage for testing ---
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            List<Map<String, Object>> mockData = java.util.Arrays.asList(
-                    createRow("Alice", 120, 3500),
-                    createRow("Bob", 100, 4200),
-                    createRow("Charlie", 90, 3900)
-            );
-
-            new LeaderboardFrame(101, mockData).setVisible(true);
-        });
-    }
-
-    private static Map<String, Object> createRow(String username, int score, int timeMs) {
-        java.util.Map<String, Object> map = new java.util.HashMap<>();
-        map.put("username", username);
-        map.put("total_score", score);
-        map.put("total_time_ms", timeMs);
-        return map;
     }
 }

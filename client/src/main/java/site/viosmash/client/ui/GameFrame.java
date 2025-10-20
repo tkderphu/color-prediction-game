@@ -102,18 +102,6 @@ public class GameFrame extends JFrame {
         });
     }
 
-//    public void updateRank(List<Map<String, Object>> leaderboard) {
-//        SwingUtilities.invokeLater(() -> {
-//            tableModel.setRowCount(0); // clear existing rows
-//            for (Map<String, Object> r : leaderboard) {
-//                String username = String.valueOf(r.getOrDefault("username", "?"));
-//                Object score = r.getOrDefault("totalScore", 0);
-//                Object time = r.getOrDefault("totalTimeMs", 0);
-//                tableModel.addRow(new Object[]{username, score, time});
-//            }
-//        });
-//    }
-
     public void onRoundData(long matchId, int roundNo, String level, List<String> colors,
                             int showMs, int countdownMs, long serverEpoch) {
         this.matchId=matchId; this.roundNo=roundNo; this.colors=colors;
@@ -166,7 +154,7 @@ public class GameFrame extends JFrame {
             countTimer.start();
 
 
-
+            submitBtn.setEnabled(true);
             revalidate(); repaint();
         });
     }
@@ -205,6 +193,7 @@ public class GameFrame extends JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Điểm vòng: "+ys+" | Thời gian: "+yt+" ms");
                 submitBtn.setEnabled(true);
+                System.out.println("fuck");
                 // reset buttons
                 for (JButton b : selectButtons) b.setEnabled(true);
             }

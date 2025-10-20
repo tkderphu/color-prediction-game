@@ -130,6 +130,8 @@ public class ServerCore {
                     }
                 }
 
+                Thread.sleep(1000);
+
                 // reset trạng thái tạm cho vòng tiếp
                 ctx.roundSubmittedUsers.clear();
                 ctx.currentRound = null;
@@ -177,15 +179,6 @@ public class ServerCore {
         matchDao.updatePlayerTotals(matchId, username, score, timeMs);
 
         ctx.roundSubmittedUsers.add(username);
-
-        ClientHandler h = lobby.online.get(username);
-//        if (h != null) {
-//            Map<String, Object> resultPayload = new HashMap<>();
-//            resultPayload.put("roundNo", roundNo);
-//            resultPayload.put("yourScore", score);
-//            resultPayload.put("yourTimeMs", timeMs);
-//            h.send("ROUND_RESULT", resultPayload);
-//        }
     }
 
     public void handleHistory(ClientHandler h, Message m) throws Exception {
@@ -215,9 +208,9 @@ public class ServerCore {
         }
 
         public static RoundSpec forRound(int r) {
-            if (r <= 5) return new RoundSpec("EASY", 3, 3000);
-            if (r <= 10) return new RoundSpec("MEDIUM", 5, 2000);
-            return new RoundSpec("HARD", 6, 1000);
+            if (r <= 5) return new RoundSpec("EASY", 3, 8000);
+            if (r <= 10) return new RoundSpec("MEDIUM", 5, 6500);
+            return new RoundSpec("HARD", 6, 5500);
         }
     }
 

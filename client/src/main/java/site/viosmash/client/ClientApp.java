@@ -123,10 +123,6 @@ public class ClientApp {
                 if (game != null) game.onRoundData(matchId, roundNo, level, colors, showMs, countdownMs, serverEpochMs);
                 break;
             }
-            case "ROUND_RESULT": {
-                if (game != null) game.onRoundResult(m.payload);
-                break;
-            }
             case "UPDATE_TABLE_SCORE": {
                 List<Map<String, Object>> leaderboard = (List<Map<String, Object>>) m.payload.get("leaderboard");
                 if(game != null) {

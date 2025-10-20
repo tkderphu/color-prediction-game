@@ -10,9 +10,12 @@ public class Score {
         if (answer == null || answer.isEmpty()) return 0.0;
         int correct = 0;
         int n = Math.min(answer.size(), truth.size());
-        for (int i=0;i<n;i++) {
-            if (truth.get(i).equalsIgnoreCase(answer.get(i))) correct++;
+        for(int j = 0; j < answer.size(); j++) {
+            for(int i = 0; i < truth.size(); i++) {
+                if (truth.get(i).equalsIgnoreCase(answer.get(j))) correct++;
+            }
         }
+
         if (correct == truth.size()) return 1.0;
         return Math.min(1.0, correct * 0.2);
     }

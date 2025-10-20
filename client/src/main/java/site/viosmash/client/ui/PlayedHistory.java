@@ -63,18 +63,6 @@ public class PlayedHistory extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    /** Re-render table if histories updated dynamically */
-    public void updateHistoryTable(List<Map<String, Object>> newHistories) {
-        model.setRowCount(0); // Clear table
-        for (Map<String, Object> history : newHistories) {
-            model.addRow(new Object[]{
-                    history.getOrDefault("id", "N/A"),
-                    history.getOrDefault("room_owner", "Unknown"),
-                    history.getOrDefault("started_at", "Unknown"),
-                    "View Detail"
-            });
-        }
-    }
 
     // --- Button Renderer ---
     class ButtonRenderer extends JButton implements TableCellRenderer {
@@ -133,39 +121,6 @@ public class PlayedHistory extends JFrame {
             clicked = false;
             return super.stopCellEditing();
         }
-    }
-
-    // --- Separate Leaderboard Window ---
-
-    // --- For quick testing ---
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                List<Map<String, Object>> mockHistories = new ArrayList<>();
-
-                Map<String, Object> m1 = new HashMap<>();
-                m1.put("id", 1);
-                m1.put("room_owner", "Alice");
-                m1.put("started_at", "2025-10-10 15:30");
-                mockHistories.add(m1);
-
-                Map<String, Object> m2 = new HashMap<>();
-                m2.put("id", 2);
-                m2.put("room_owner", "Bob");
-                m2.put("started_at", "2025-10-11 12:00");
-                mockHistories.add(m2);
-
-                Map<String, Object> m3 = new HashMap<>();
-                m3.put("id", 3);
-                m3.put("room_owner", "Charlie");
-                m3.put("started_at", "2025-10-12 09:15");
-                mockHistories.add(m3);
-
-                new PlayedHistory(null, mockHistories).setVisible(true);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
     }
 
 }
