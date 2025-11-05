@@ -1,8 +1,7 @@
 // server/src/main/java/site/viosmash/server/ClientHandler.java
 package site.viosmash.server;
 
-import site.viosmash.common.Json;
-import site.viosmash.common.Message;
+import site.viosmash.common.*;
 
 import java.io.*;
 import java.net.Socket;
@@ -17,7 +16,7 @@ public class ClientHandler implements Runnable {
     private final Lobby lobby;
     private final ServerCore core;
     private volatile boolean running = true;
-    private String username = null;
+    private User user;
     private BufferedReader in;
     private BufferedWriter out;
 
@@ -25,10 +24,6 @@ public class ClientHandler implements Runnable {
         this.socket = socket;
         this.lobby = lobby;
         this.core = core;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     @Override
@@ -93,9 +88,10 @@ public class ClientHandler implements Runnable {
         int matchId  = (int) m.payload.get("matchId");
 
         try {
-            List<Map<String, Object>> maps = core.matchDao.finalRanking(matchId);
+            List<MatchPlayer> matchPlayers = core.matchPlayerDao.finalRanking(matchId);
+
             Map<String, Object> map = new HashMap<>();
-            map.put("leaderboard", maps);
+            map.put("leaderboard", matchPlayers);
             map.put("matchId", matchId);
             send("MATCH_DETAIL_RESPONSE", map);
         } catch (Exception e) {
@@ -106,7 +102,7 @@ public class ClientHandler implements Runnable {
     private void handlePlayedHistory(Message m) throws IOException, SQLException {
         //lay danh sach lich su
         String username = (String) m.payload.get("username");
-        List<Map<String, Object>> listMatchPlayed = core.matchDao.getListMatchPlayed(username);
+        List<Match> listMatchPlayed = core.matchDao.getListMatchPlayed(this.user.getId());
         Map<String, Object> map = new HashMap<>();
         map.put("matchsPlayed", listMatchPlayed);
         send(
@@ -117,22 +113,26 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleLogin(Message m) throws Exception {
-        if (username != null) {
+        if (user != null) {
             sendError("ALREADY_LOGGED", "Already logged in");
             return;
         }
         String u = (String) m.payload.get("username");
         String p = (String) m.payload.get("password");
-        if (!core.userDao.verifyLogin(u, p)) {
+        User user = new User();
+        user.setUsername(u);
+        user.setPassword(p);
+
+        this.user = core.userDao.verifyLogin(user);
+        if (this.user == null) {
             sendError("BAD_CREDENTIALS", "Invalid username/password");
             return;
         }
-        username = u;
-        lobby.online.put(username, this);
-        lobby.status.put(username, "IDLE");
+        lobby.online.put(this.user, this);
+        lobby.status.put(this.user, "IDLE");
 
         Map<String, Object> payload = new HashMap<>();
-        payload.put("username", username);
+        payload.put("user", this.user);
         send("LOGIN_OK", payload);
 
         core.broadcastOnlineList();
@@ -156,8 +156,8 @@ public class ClientHandler implements Runnable {
         }
         // tạo phòng theo owner: là người mời
         if(room == null) {
-            room = lobby.getOrCreateRoom(username);
-            room.members.add(username);
+            room = lobby.getOrCreateRoom(this.user);
+            room.members.add(this.user);
             sendRoomUpdate(room, null);
         }
 
@@ -168,8 +168,8 @@ public class ClientHandler implements Runnable {
 
     private void handleInviteResponse(Message m) throws Exception {
         requireLogin();
-        String from = (String) m.payload.get("fromUsername");
-        String invitedUsername = (String) m.payload.get("invitedUsername");
+        User from = (User) m.payload.get("fromUser");
+        User invitedUser = (User) m.payload.get("invitedUser");
         boolean accepted = (Boolean) m.payload.get("accepted");
         Room room = null;
         for(Room r : lobby.rooms.values()) {
@@ -192,16 +192,16 @@ public class ClientHandler implements Runnable {
         //leave previous room
         Room theRoom = null;
         for (Room r : lobby.rooms.values()) {
-            if (r.members.contains(invitedUsername)) {
+            if (r.members.contains(invitedUser)) {
                 theRoom = r;
                 break;
             }
         }
         if(theRoom != null) {
-            theRoom.members.remove(invitedUsername);
+            theRoom.members.remove(invitedUser);
             sendRoomUpdate(theRoom, null);
         }
-        room.members.add(invitedUsername);
+        room.members.add(invitedUser);
         sendRoomUpdate(room, null);
     }
 
@@ -209,7 +209,7 @@ public class ClientHandler implements Runnable {
         requireLogin();
         Room theRoom = null;
         for (Room r : lobby.rooms.values()) {
-            if (r.members.contains(username)) {
+            if (r.members.contains(this.user)) {
                 theRoom = r;
                 break;
             }
@@ -220,14 +220,14 @@ public class ClientHandler implements Runnable {
 
 
 
-        theRoom.members.remove(username);
+        theRoom.members.remove(this.user);
         lobby.dissolveIfEmpty(theRoom.owner);
-        sendRoomUpdate(theRoom, username);
+        sendRoomUpdate(theRoom, this.user);
     }
 
     private void handleStartGame(Message m) throws Exception {
         requireLogin();
-        Room room = lobby.rooms.get(username);
+        Room room = lobby.rooms.get(this.user);
         if (room == null) {
             sendError("NOT_OWNER", "Only owner can start");
             return;
@@ -237,15 +237,15 @@ public class ClientHandler implements Runnable {
 
     private void handleSubmitAnswer(Message m) throws Exception {
         requireLogin();
-        core.handleSubmit(username, m);
+        core.handleSubmit(this.user, m);
     }
 
     private void logoutCleanup() {
-        if (username != null) {
-            lobby.online.remove(username);
-            lobby.status.remove(username);
+        if (this.user != null) {
+            lobby.online.remove(this.user);
+            lobby.status.remove(this.user);
             for (Room r : lobby.rooms.values()) {
-                r.members.remove(username);
+                r.members.remove(this.user);
             }
             lobby.rooms.entrySet().removeIf(e -> e.getValue().members.isEmpty());
             try {
@@ -272,14 +272,14 @@ public class ClientHandler implements Runnable {
     }
 
     private void requireLogin() throws Exception {
-        if (username == null) throw new Exception("NOT_LOGGED_IN");
+        if (this.user == null) throw new Exception("NOT_LOGGED_IN");
     }
 
-    private void sendRoomUpdate(Room room, String usernameLeave) throws IOException {
+    private void sendRoomUpdate(Room room, User usernameLeave) throws IOException {
         Map<String, Object> payload = new HashMap<>();
         payload.put("owner", room.owner);
         payload.put("members", new ArrayList<>(room.members));
-        for (String u : room.members) {
+        for (User u : room.members) {
             ClientHandler h = lobby.online.get(u);
             if (h != null) {
                 h.send("ROOM_UPDATE", payload);

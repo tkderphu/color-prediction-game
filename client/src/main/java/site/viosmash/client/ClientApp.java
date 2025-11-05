@@ -25,7 +25,7 @@ public class ClientApp {
     public void start() throws Exception {
         SwingUtilities.invokeLater(() -> {
             try {
-                net.connect("127.0.0.1", 6000, this::onMessage);
+                net.connect("localhost", 6000, this::onMessage);
                 login = new LoginFram2(net, v -> {});
                 login.setVisible(true);
             } catch (Exception e) {

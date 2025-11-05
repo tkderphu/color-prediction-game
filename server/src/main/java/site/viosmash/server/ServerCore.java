@@ -2,15 +2,16 @@
 package site.viosmash.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import site.viosmash.common.Json;
-import site.viosmash.common.Message;
-import site.viosmash.server.dao.MatchDao;
-import site.viosmash.server.dao.UserDao;
+import site.viosmash.common.*;
+import site.viosmash.server.dao.*;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,12 +19,16 @@ public class ServerCore {
     public final Lobby lobby = new Lobby();
     public final UserDao userDao = new UserDao();
     public final MatchDao matchDao = new MatchDao();
+    public final MatchPlayerDao matchPlayerDao = new MatchPlayerDao();
+    public final RoundResultDao roundResultDao = new RoundResultDao();
+    private final RoundDao roundDao = new RoundDao();
 //    public final MatchHistoryDao matchHistoryDao = new MatchHistoryDao();
     // Trạng thái trận đang diễn ra: matchId -> context
-    private final Map<Long, MatchContext> matches = new ConcurrentHashMap<>();
+    private final Map<Integer, MatchContext> matches = new ConcurrentHashMap<>();
 
     public void startTcp(int port) throws Exception {
-        try (ServerSocket ss = new ServerSocket(port)) {
+        InetAddress inetAddress = InetAddress.getByName("localhost");
+        try (ServerSocket ss = new ServerSocket(port, 0, inetAddress)) {
             System.out.println("Server listening on " + port);
             while (true) {
                 Socket s = ss.accept();
@@ -35,8 +40,8 @@ public class ServerCore {
 
     public void broadcastOnlineList() throws IOException {
         List<Map<String, Object>> players = new ArrayList<>();
-        for (Map.Entry<String, ClientHandler> e : lobby.online.entrySet()) {
-            String u = e.getKey();
+        for (Map.Entry<User, ClientHandler> e : lobby.online.entrySet()) {
+            User u = e.getKey();
             String st = lobby.status.containsKey(u) ? lobby.status.get(u) : "IDLE";
             Map<String, Object> entry = new HashMap<>();
             entry.put("username", u);
@@ -52,11 +57,22 @@ public class ServerCore {
 
     // Bắt đầu 1 trận 15 vòng
     public void startMatch(Room room) throws Exception {
-        long matchId = matchDao.createMatch(room.owner);
-        MatchContext ctx = new MatchContext(matchId, new ArrayList<String>(room.members));
+        Match match = new Match();
+        match.setRoomOwner(room.owner);
+        int matchId = matchDao.createMatch(match);
+        match.setId(matchId);
+
+        MatchContext ctx = new MatchContext(matchId, new ArrayList<User>(room.members));
         matches.put(matchId, ctx);
-        for (String u : room.members) {
-            matchDao.addPlayer(matchId, u);
+        for (User u : room.members) {
+            MatchPlayer matchPlayer = new MatchPlayer();
+            User user = new User();
+            user.setId(u.getId());
+
+            matchPlayer.setUser(user);
+            matchPlayer.setMatch(match);
+
+            matchPlayerDao.savePlayer(matchPlayer);
             lobby.status.put(u, "PLAYING");
             ClientHandler h = lobby.online.get(u);
             if (h != null) {
@@ -83,11 +99,21 @@ public class ServerCore {
             for (int roundNo = 1; roundNo <= 15; roundNo++) {
                 RoundSpec spec = RoundSpec.forRound(roundNo);
                 List<String> colors = ColorGen.generate(spec.colorCount);
-                String colorsJson = Json.mapper().writeValueAsString(colors);
 
-                long roundId = matchDao.createRound(ctx.matchId, roundNo, spec.level,
-                        colorsJson, spec.showMs, spec.countdownMs);
+                Round round = new Round();
 
+                Match match = new Match();
+                match.setId(ctx.matchId);
+
+                round.setMatch(match);
+
+                round.setRoundNo(roundNo);
+                round.setLevel(spec.level);
+                round.setColors(colors);
+                round.setShowMs(spec.showMs);
+                round.setCountDownMs(spec.countdownMs);
+
+                int roundId = roundDao.createRound(round);
                 long serverEpoch = System.currentTimeMillis();
                 ctx.currentRound = new LiveRound(roundId, roundNo, spec, colors, serverEpoch);
 
@@ -101,7 +127,7 @@ public class ServerCore {
                 payload.put("countdownMs", spec.countdownMs);
                 payload.put("serverEpochMs", serverEpoch);
 
-                for (String u : ctx.players) {
+                for (User u : ctx.players) {
                     ClientHandler h = lobby.online.get(u);
                     if (h != null) h.send("ROUND_DATA", payload);
                 }
@@ -110,18 +136,41 @@ public class ServerCore {
                 Thread.sleep(spec.showMs + spec.countdownMs + 500);
 
                 // Với những ai chưa gửi → tính 0 điểm, thời gian = countdownMs
-                for (String u : ctx.players) {
+                for (User u : ctx.players) {
                     if (!ctx.roundSubmittedUsers.contains(u)) {
-                        double score = 0.0;
+                        float score = 0.0f;
                         long timeMs = spec.countdownMs;
-                        matchDao.saveRoundResult(ctx.currentRound.roundId, u, null, score, timeMs, null);
-                        matchDao.updatePlayerTotals(ctx.matchId, u, score, timeMs);
+
+
+                        RoundResult roundResult = new RoundResult();
+                        Round round1 = new Round();
+                        round1.setId(ctx.currentRound.roundId);
+
+                        roundResult.setRound(round1);
+                        roundResult.setUser(u);
+                        roundResult.setSelectedColors(null);
+                        roundResult.setScore(score);
+                        roundResult.setTimeMs(timeMs);
+                        roundResult.setSentAt(null);
+
+                        roundResultDao.save(roundResult);
+
+                        MatchPlayer matchPlayer = new MatchPlayer();
+                        Match match1 = new Match();
+                        match1.setId(ctx.matchId);
+
+                        matchPlayer.setMatch(match1);
+                        matchPlayer.setUser(u);
+                        matchPlayer.setTotalScore(score);
+                        matchPlayer.setTotalTimeMs(timeMs);
+
+                        matchPlayerDao.updatePlayerTotals(matchPlayer);
                     }
                 }
 
                 // Gửi ROUND_RESULT tóm tắt
-                List<Map<String, Object>> lb = ctx.buildLeaderboard(matchDao);
-                for (String u : ctx.players) {
+                List<MatchPlayer> lb = ctx.buildLeaderboard(matchPlayerDao);
+                for (User u : ctx.players) {
                     ClientHandler h = lobby.online.get(u);
                     if (h != null) {
                         Map<String, Object> rrPayload = new HashMap<>();
@@ -138,9 +187,11 @@ public class ServerCore {
             }
 
             // Kết thúc trận
-            matchDao.endMatch(ctx.matchId);
-            List<Map<String, Object>> finalRank = matchDao.finalRanking(ctx.matchId);
-            for (String u : ctx.players) {
+            Match match = new Match();
+            match.setId(ctx.matchId);
+            matchDao.endMatch(match);
+            List<MatchPlayer> finalRank = matchPlayerDao.finalRanking(ctx.matchId);
+            for (User u : ctx.players) {
                 ClientHandler h = lobby.online.get(u);
                 if (h != null) {
                     Map<String, Object> endPayload = new HashMap<>();
@@ -158,8 +209,8 @@ public class ServerCore {
     }
 
     // Người chơi nộp bài cho vòng hiện tại
-    public void handleSubmit(String username, Message m) throws Exception {
-        long matchId = ((Number) m.payload.get("matchId")).longValue();
+    public void handleSubmit(User user, Message m) throws Exception {
+        int matchId = ((Number) m.payload.get("matchId")).intValue();
         int roundNo = ((Number) m.payload.get("roundNo")).intValue();
         List<String> selected = Json.mapper().convertValue(
                 m.payload.get("selected"), new TypeReference<List<String>>() {});
@@ -171,14 +222,35 @@ public class ServerCore {
         long elapsed = Math.max(0, clientEpochMs - ctx.currentRound.serverEpochMs);
         long timeMs = Math.min(elapsed, ctx.currentRound.spec.countdownMs);
 
-        double score = Score.calcScore(selected, ctx.currentRound.colors);
+        float score = Score.calcScore(selected, ctx.currentRound.colors);
 
         String selJson = Json.mapper().writeValueAsString(selected);
-        matchDao.saveRoundResult(ctx.currentRound.roundId, username, selJson, score, timeMs,
-                new Timestamp(System.currentTimeMillis()));
-        matchDao.updatePlayerTotals(matchId, username, score, timeMs);
 
-        ctx.roundSubmittedUsers.add(username);
+        RoundResult roundResult = new RoundResult();
+        Round round = new Round();
+        round.setId(ctx.currentRound.roundId);
+
+        roundResult.setRound(round);
+        roundResult.setUser(user);
+        roundResult.setSelectedColors(selected);
+        roundResult.setScore(score);
+        roundResult.setTimeMs(timeMs);
+        roundResult.setSentAt(LocalDateTime.now());
+
+        roundResultDao.save(roundResult);
+
+        MatchPlayer matchPlayer = new MatchPlayer();
+        Match match = new Match();
+        match.setId(matchId);
+
+        matchPlayer.setMatch(match);
+        matchPlayer.setUser(user);
+        matchPlayer.setTotalScore(score);
+        matchPlayer.setTotalTimeMs(timeMs);
+
+        matchPlayerDao.updatePlayerTotals(matchPlayer);
+
+        ctx.roundSubmittedUsers.add(user);
     }
 
     public void handleHistory(ClientHandler h, Message m) throws Exception {
@@ -215,13 +287,13 @@ public class ServerCore {
     }
 
     public static class LiveRound {
-        public final long roundId;
+        public final int roundId;
         public final int roundNo;
         public final RoundSpec spec;
         public final List<String> colors;
         public final long serverEpochMs;
 
-        public LiveRound(long roundId, int roundNo, RoundSpec spec, List<String> colors, long serverEpochMs) {
+        public LiveRound(int roundId, int roundNo, RoundSpec spec, List<String> colors, long serverEpochMs) {
             this.roundId = roundId;
             this.roundNo = roundNo;
             this.spec = spec;
@@ -231,21 +303,21 @@ public class ServerCore {
     }
 
     public static class MatchContext {
-        public final long matchId;
-        public final List<String> players;
+        public final int matchId;
+        public final List<User> players;
         public volatile LiveRound currentRound;
-        public final Set<String> roundSubmittedUsers = ConcurrentHashMap.newKeySet();
+        public final Set<User> roundSubmittedUsers = ConcurrentHashMap.newKeySet();
 
-        public MatchContext(long matchId, List<String> players) {
+        public MatchContext(int matchId, List<User> players) {
             this.matchId = matchId;
             this.players = players;
         }
 
-        public List<Map<String, Object>> buildLeaderboard(MatchDao dao) {
+        public List<MatchPlayer> buildLeaderboard(MatchPlayerDao dao) {
             try {
                 return dao.finalRanking(matchId);
             } catch (Exception e) {
-                return new ArrayList<Map<String, Object>>();
+                return new ArrayList<>();
             }
         }
     }

@@ -2,30 +2,31 @@
 package site.viosmash.server.dao;
 import java.sql.*;
 import org.mindrot.jbcrypt.BCrypt;
-import site.viosmash.server.Db;
+import site.viosmash.common.User;
 
-public class UserDao {
-    public boolean verifyLogin(String username, String password) {
-        try (Connection c = Db.get();
-             PreparedStatement ps = c.prepareStatement("SELECT password_hash FROM users WHERE username=?")) {
-            ps.setString(1, username);
+public class UserDao extends Dao{
+    public User verifyLogin(User user) {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT id, username, password FROM users WHERE username=?")) {
+            ps.setString(1, user.getUsername());
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) return false;
-                String hash = rs.getString(1);
-                return BCrypt.checkpw(password, hash);
+                if (!rs.next()) return null;
+                String password = rs.getString(3);
+                int id = rs.getInt(1);
+                String username = rs.getString(2);
+                if(BCrypt.checkpw(user.getPassword(), password)) {
+                    return null;
+                }
+
+                User user1 =new User();
+                user1.setPassword(password);
+                user1.setUsername(username);
+                user1.setId(id);
+
+                return user1;
             }
         } catch (Exception e) {
-            e.printStackTrace(); return false;
-        }
-    }
-    public void createUser(String username, String rawPassword) throws Exception {
-        String hash = BCrypt.hashpw(rawPassword, BCrypt.gensalt(10));
-        try (Connection c = Db.get();
-             PreparedStatement ps = c.prepareStatement(
-                     "INSERT INTO users(username,password_hash) VALUES (?,?)")) {
-            ps.setString(1, username);
-            ps.setString(2, hash);
-            ps.executeUpdate();
+            e.printStackTrace();
+            return null;
         }
     }
 }
