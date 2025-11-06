@@ -1,8 +1,8 @@
 package site.viosmash.client.ui;
 
 import site.viosmash.client.NetClient;
-import site.viosmash.client.utils.User;
-import site.viosmash.common.UserStatus;
+import site.viosmash.common.Json;
+import site.viosmash.common.User;
 
 import javax.swing.*;
 import java.awt.*;
@@ -68,9 +68,9 @@ public class LobbyFrame2 extends JFrame {
                     JOptionPane.YES_NO_OPTION);
             boolean accepted = (res == JOptionPane.YES_OPTION);
             try {
-                java.util.Map<String, Object> payload = new java.util.HashMap<>();
-                payload.put("fromUsername", from);
-                payload.put("accepted", accepted);
+                java.util.Map<String, String> payload = new java.util.HashMap<>();
+                payload.put("fromUsername", Json.to(from));
+                payload.put("accepted", Json.to(accepted));
                 net.send("INVITE_RESPONSE", payload);
             } catch (Exception ignored) {}
         });
@@ -125,7 +125,7 @@ public class LobbyFrame2 extends JFrame {
             User user = onlineList.getSelectedValue();
             if (user == null) return;
             try {
-                java.util.Map<String, Object> payload = new java.util.HashMap<>();
+                java.util.Map<String, String> payload = new java.util.HashMap<>();
                 String username = user.getUsername();
                 payload.put("toUsername", username);
                 net.send("INVITE", payload);

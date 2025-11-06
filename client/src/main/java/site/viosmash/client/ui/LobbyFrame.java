@@ -3,6 +3,8 @@ package site.viosmash.client.ui;
 
 
 import site.viosmash.client.NetClient;
+import site.viosmash.common.Json;
+import site.viosmash.common.User;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,11 +18,12 @@ public class LobbyFrame extends JFrame {
     private final JButton inviteBtn = new JButton("Mời chơi");
     private final JButton startBtn  = new JButton("Bắt đầu (chủ phòng)");
     private final JButton leaveBtn  = new JButton("Thoát phòng");
-    private String myName;
+    private final User user;
 
-    public LobbyFrame(NetClient net, String myName) {
-        super("Phòng chờ - " + myName);
-        this.net = net; this.myName = myName;
+    public LobbyFrame(NetClient net, User user) {
+        super("Phòng chờ - " + user.getUsername());
+        this.user = user;
+        this.net = net;
         setSize(640, 400); setLocationRelativeTo(null); setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         JList<String> online = new JList<>(onlineModel);
@@ -47,9 +50,8 @@ public class LobbyFrame extends JFrame {
             String target = online.getSelectedValue();
             if (target == null) return;
             try {
-                java.util.Map<String, Object> payload = new java.util.HashMap<>();
+                java.util.Map<String, String> payload = new java.util.HashMap<>();
                 String username = target.split("\\s+")[0];
-                payload.put("fromUsername", myName);
                 payload.put("toUsername", username);
                 net.send("INVITE", payload);
             } catch (Exception ignored) {}
@@ -57,14 +59,14 @@ public class LobbyFrame extends JFrame {
 
         startBtn.addActionListener(e -> {
             try {
-                java.util.Map<String, Object> payload = new java.util.HashMap<>();
+                java.util.Map<String, String> payload = new java.util.HashMap<>();
                 net.send("START_GAME", payload);
             } catch (Exception ignored) {}
         });
         leaveBtn.addActionListener(e -> {
             try {
-                java.util.Map<String, Object> payload = new java.util.HashMap<>();
-                payload.put("username", myName);
+                java.util.Map<String, String> payload = new java.util.HashMap<>();
+                payload.put("username", user.getUsername());
                 net.send("LEAVE_ROOM", payload);
             } catch (Exception ignored) {}
             finally {
@@ -73,7 +75,7 @@ public class LobbyFrame extends JFrame {
         });
     }
 
-    public void onOnlineList(List<Map<String,Object>> players) {
+    public void onOnlineList(List<User> players) {
         SwingUtilities.invokeLater(() -> {
             try {
                 Thread.sleep(1000);
@@ -81,10 +83,10 @@ public class LobbyFrame extends JFrame {
                 throw new RuntimeException(e);
             }
             onlineModel.clear();
-            for (Map<String, Object> p : players) {
-                String u = (String)p.get("username");
-                String st = (String)p.get("status");
-                if (!u.equals(myName)) onlineModel.addElement(u + " ("+st+")");
+            for (User p : players) {
+                String u = p.getUsername();
+                String st = p.getStatus();
+                if (!u.equals(user.getUsername())) onlineModel.addElement(u + " ("+st+")");
             }
         });
     }
@@ -93,30 +95,30 @@ public class LobbyFrame extends JFrame {
         return roomModel;
     }
 
-    public void onRoomUpdate(String owner, List<String> members) {
+    public void onRoomUpdate(User owner, List<User> members) {
         SwingUtilities.invokeLater(() -> {
             roomModel.clear();
-            for (String m : members) {
-                if(owner.equals(m)) {
-                    roomModel.addElement(m + " - " + "owner");
+            for (User m : members) {
+                if(owner != null && owner.equals(m)) {
+                    roomModel.addElement(owner.getUsername() + " - " + "owner");
                 } else {
-                    roomModel.addElement(m);
+                    roomModel.addElement(m.getUsername());
                 }
             };
         });
     }
 
-    public void onInviteIncoming(NetClient net, String from) {
+    public void onInviteIncoming(NetClient net, User from) {
         SwingUtilities.invokeLater(() -> {
             int res = JOptionPane.showConfirmDialog(this,
-                    "Bạn có nhận lời mời từ "+from+" không?", "Mời chơi",
+                    "Bạn có nhận lời mời từ "+from.getUsername()+" không?", "Mời chơi",
                     JOptionPane.YES_NO_OPTION);
             boolean accepted = (res == JOptionPane.YES_OPTION);
             try {
-                java.util.Map<String, Object> payload = new java.util.HashMap<>();
-                payload.put("fromUsername", from);
-                payload.put("invitedUsername", myName);
-                payload.put("accepted", accepted);
+                java.util.Map<String, String> payload = new java.util.HashMap<>();
+                payload.put("fromUser", Json.to(from));
+                payload.put("invitedUser", Json.to(user));
+                payload.put("accepted", Json.to(accepted));
                 net.send("INVITE_RESPONSE", payload);
             } catch (Exception ignored) {}
         });

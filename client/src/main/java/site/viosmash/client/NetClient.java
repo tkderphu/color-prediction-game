@@ -38,7 +38,7 @@ public class NetClient {
         } catch (Exception ignored) {}
     }
 
-    public synchronized void send(String type, Map<String,Object> payload) throws IOException {
+    public synchronized void send(String type, Map<String,String > payload) throws IOException {
         Message m = new Message();
         m.type = type; m.payload = payload;
         String s = Json.to(m);

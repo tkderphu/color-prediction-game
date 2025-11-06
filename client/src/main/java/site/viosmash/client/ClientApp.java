@@ -3,9 +3,9 @@ package site.viosmash.client;
 
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import site.viosmash.client.ui.*;
-import site.viosmash.client.utils.User;
-import site.viosmash.common.Message;
+import site.viosmash.common.*;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -37,15 +37,16 @@ public class ClientApp {
     private void onMessage(Message m) {
         switch (m.type) {
             case "MATCH_DETAIL_RESPONSE":
-                List<Map<String, Object>> leaderboardObject = (List<Map<String, Object>>) m.payload.get("leaderboard");
+                List<MatchPlayer> leaderboardObject = Json.from(m.payload.get("leaderboard"), new TypeReference<List<MatchPlayer>>() {});
                 leaderboardFrame = new LeaderboardFrame(
-                        (int) m.payload.get("matchId"),
+                        Integer.parseInt(m.payload.get("matchId")),
                         leaderboardObject
                 );
                 leaderboardFrame.setVisible(true);
                 break;
             case "PLAYED_HISTORY_RESPONSE":
-                List<Map<String, Object>> object = (List<Map<String, Object>>) m.payload.get("matchsPlayed");
+                List<Match> object = Json.from(m.payload.get("matchsPlayed"), new TypeReference<List<Match>>() {
+                });
                 try {
                     playedHistory = new PlayedHistory(net, object);
                     playedHistory.setVisible(true);
@@ -54,14 +55,12 @@ public class ClientApp {
                 }
                 break;
             case "LOGIN_OK" :
-                String u = (String)m.payload.get("username");
-                String st = (String)m.payload.get("status");
-                user = new User();
-                user.setStatus(st);
-                user.setUsername(u);
+                this.user = Json.from(m.payload.get("user"), new TypeReference<User>() {
+                });
+                this.user.setStatus((String) m.payload.get("status"));
                 SwingUtilities.invokeLater(() -> {
                     login.setVisible(false);
-                    lobby = new LobbyFrame(net, user.getUsername());
+                    lobby = new LobbyFrame(net, user);
                     homeFrame = new HomeFrame(net, user, lobby);
                     homeFrame.setVisible(true);
                 });
@@ -76,26 +75,31 @@ public class ClientApp {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                List<Map<String,Object>> players = (List<Map<String,Object>>) m.payload.get("players");
+                List<User> players = Json.from(m.payload.get("players"), new TypeReference<List<User>>() {
+                });
                 if (lobby != null) lobby.onOnlineList(players);
                 break;
             }
             case "INVITE_INCOMING": {
-                String from = (String)m.payload.get("fromUsername");
+                User from = Json.from(m.payload.get("fromUser"), new TypeReference<User>() {
+                });
                 if (lobby != null) lobby.onInviteIncoming(net, from);
                 break;
             }
             case "ROOM_UPDATE": {
                 if(m.payload.containsKey("userLeave")) {
-                    String userLeave = (String)m.payload.get("userLeave");
+                    User userLeave = Json.from(m.payload.get("userLeave"), new TypeReference<User>() {
+                    });
                     if(userLeave.equals(this.user.getUsername())) {
                         lobby.dispose();
                         homeFrame.setVisible(true);
                         return;
                     }
                 }
-                String owner = (String)m.payload.get("owner");
-                List<String> members = (List<String>) m.payload.get("members");
+                User owner = Json.from(m.payload.get("owner"), new TypeReference<User>() {
+                });
+                List<User> members = Json.from(m.payload.get("members"), new TypeReference<List<User>>() {
+                });
                 if (lobby != null) {
                     lobby.onRoomUpdate(owner, members);
                 }
@@ -104,27 +108,25 @@ public class ClientApp {
             }
             case "MATCH_BEGIN": {
                 SwingUtilities.invokeLater(() -> {
-                    List<String> players = (List<String>) m.payload.get("players");
+                    List<User> players = Json.from(m.payload.get("players"), new TypeReference<List<User>>() {
+                    });
                     game = new GameFrame(user.getUsername(), players, net, lobby.getRoomModel());
                     game.setVisible(true);
                     lobby.setVisible(false);
-                    lobby.onRoomUpdate("", new ArrayList<>());
+                    lobby.onRoomUpdate(null, new ArrayList<>());
                 });
                 break;
             }
             case "ROUND_DATA": {
-                long matchId = ((Number)m.payload.get("matchId")).longValue();
-                int roundNo = ((Number)m.payload.get("roundNo")).intValue();
-                String level = (String)m.payload.get("level");
-                List<String> colors = (List<String>) m.payload.get("colors");
-                int showMs = ((Number)m.payload.get("showMs")).intValue();
-                int countdownMs = ((Number)m.payload.get("countdownMs")).intValue();
-                long serverEpochMs = ((Number)m.payload.get("serverEpochMs")).longValue();
-                if (game != null) game.onRoundData(matchId, roundNo, level, colors, showMs, countdownMs, serverEpochMs);
+                Round round = Json.from(m.payload.get("round"), new TypeReference<Round>() {
+                });
+                long serverEpochMs = Long.parseLong(m.payload.get("serverEpochMs"));
+                if (game != null) game.onRoundData(round, serverEpochMs);
                 break;
             }
             case "UPDATE_TABLE_SCORE": {
-                List<Map<String, Object>> leaderboard = (List<Map<String, Object>>) m.payload.get("leaderboard");
+                List<MatchPlayer> leaderboard = Json.from(m.payload.get("leaderboard"), new TypeReference<List<MatchPlayer>>() {
+                });
                 if(game != null) {
                     game.updateRank(leaderboard);
                 }

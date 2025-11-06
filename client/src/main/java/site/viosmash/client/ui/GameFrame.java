@@ -2,6 +2,7 @@ package site.viosmash.client.ui;
 
 
 import site.viosmash.client.NetClient;
+import site.viosmash.common.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -12,11 +13,7 @@ import java.util.Map;
 
 public class GameFrame extends JFrame {
     private final NetClient net;
-    private long matchId;
-    private int roundNo;
-    private List<String> colors;
-    private int showMs;
-    private int countdownMs;
+    private Round round;
     private long serverEpoch;
 
     private  final DefaultListModel<String> membersModel;
@@ -32,9 +29,9 @@ public class GameFrame extends JFrame {
 
     private final DefaultTableModel tableModel;
     private final JTable table;
-    private final List<String> players;
+    private final List<User> players;
 
-    public GameFrame(String username, List<String> players, NetClient net, DefaultListModel<String> membersModel) {
+    public GameFrame(String username, List<User> players, NetClient net, DefaultListModel<String> membersModel) {
         super(username + " đang chơi");
         this.net = net;
         this.players = players;
@@ -61,8 +58,8 @@ public class GameFrame extends JFrame {
         left.add(new JScrollPane(table), BorderLayout.CENTER);
         left.setPreferredSize(new Dimension(300, 0)); // fixed width for left side
 
-        for(String player: players) {
-            tableModel.addRow(new Object[]{player, 0, 0});
+        for(User player: players) {
+            tableModel.addRow(new Object[]{player.getUsername(), 0, 0});
         }
 
 
@@ -95,22 +92,23 @@ public class GameFrame extends JFrame {
         return p;
     }
 
-    public void setMembers(List<String> ms) {
+    public void setMembers(List<User> ms) {
         SwingUtilities.invokeLater(() -> {
             membersModel.clear();
-            ms.forEach(membersModel::addElement);
+            ms.forEach(r -> {
+                membersModel.addElement(r.getUsername());
+            });
         });
     }
 
-    public void onRoundData(long matchId, int roundNo, String level, List<String> colors,
-                            int showMs, int countdownMs, long serverEpoch) {
-        this.matchId=matchId; this.roundNo=roundNo; this.colors=colors;
-        this.showMs=showMs; this.countdownMs=countdownMs; this.serverEpoch=serverEpoch;
+    public void onRoundData(Round round,  long serverEpoch) {
+        this.round = round;
+         this.serverEpoch=serverEpoch;
         this.selected.clear();
         SwingUtilities.invokeLater(() -> {
-            info.setText("Vòng "+roundNo+" ["+level+"] — hiển thị "+(showMs/1000.0)+"s, trả lời "+(countdownMs/1000.0)+"s");
+            info.setText("Vòng "+round.getRoundNo()+" ["+round.getLevel()+"] — hiển thị "+(round.getShowMs()/1000.0)+"s, trả lời "+(round.getCountDownMs()/1000.0)+"s");
             colorPanel.removeAll();
-            for (String c : colors) {
+            for (String c : round.getColors()) {
                 JLabel l = new JLabel(c);
                 l.setOpaque(true);
                 l.setBackground(mapColor(c));
@@ -120,7 +118,7 @@ public class GameFrame extends JFrame {
             }
             // sau showMs thì ẩn:
             if (hideTimer != null) hideTimer.stop();
-            hideTimer = new javax.swing.Timer(showMs, ev -> {
+            hideTimer = new javax.swing.Timer(round.getShowMs(), ev -> {
                 colorPanel.removeAll();
                 colorPanel.add(new JLabel("ĐÃ ẨN — hãy chọn lại thứ tự!"));
                 colorPanel.revalidate(); colorPanel.repaint();
@@ -129,10 +127,10 @@ public class GameFrame extends JFrame {
 
             selectPanel.removeAll();
             selectButtons.clear();
-            for (String c : colors) {
+            for (String c : round.getColors()) {
                 JButton b = new JButton(c);
                 b.addActionListener(e -> {
-                    if (selected.size() < colors.size()) {
+                    if (selected.size() < round.getColors().size()) {
                         selected.add(c);
                         b.setEnabled(false);
                     }
@@ -144,7 +142,7 @@ public class GameFrame extends JFrame {
             long start = System.currentTimeMillis();
             countTimer = new javax.swing.Timer(100, ev -> {
                 long elapsed = System.currentTimeMillis() - start;
-                long left = countdownMs - elapsed;
+                long left = round.getCountDownMs() - elapsed;
                 timerLabel.setText("Còn: " + Math.max(0, left/1000.0) + "s");
                 if (left <= 0) {
                     countTimer.stop();
@@ -161,24 +159,25 @@ public class GameFrame extends JFrame {
 
     private void submit() {
         try {
-            java.util.Map<String, Object> payload = new java.util.HashMap<>();
-            payload.put("matchId", matchId);
-            payload.put("roundNo", roundNo);
-            payload.put("selected", new ArrayList<>(selected));
-            payload.put("clientEpochMs", System.currentTimeMillis());
+            java.util.Map<String, String> payload = new java.util.HashMap<>();
+            RoundResult roundResult = new RoundResult();
+            roundResult.setRound(this.round);
+            roundResult.setSelectedColors(new ArrayList<>(selected));
+            payload.put("roundResult", Json.to(roundResult));
+            payload.put("clientEpochMs", System.currentTimeMillis() + "");
             net.send("SUBMIT_ANSWER", payload);
 
             submitBtn.setEnabled(false);
         } catch (Exception ignored) {}
     }
 
-    public void updateRank(List<Map<String, Object>> leaderboard) {
+    public void updateRank(List<MatchPlayer> leaderboard) {
         SwingUtilities.invokeLater(() -> {
             tableModel.setRowCount(0); // clear existing rows
-            for (Map<String, Object> r : leaderboard) {
-                String username = String.valueOf(r.getOrDefault("username", "?"));
-                Object score = r.getOrDefault("totalScore", 0);
-                Object time = r.getOrDefault("totalTimeMs", 0);
+            for (MatchPlayer r : leaderboard) {
+                String username = r.getUser().getUsername();
+                Object score = r.getTotalScore();
+                Object time =r.getTotalTimeMs();
                 tableModel.addRow(new Object[]{username, score, time});
             }
         });

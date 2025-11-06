@@ -7,7 +7,7 @@ public class Room {
     public  User owner;
     public final Set<User> members = new LinkedHashSet<>();
     public Room(User user) {
-        this.owner = owner;
+        this.owner = user;
         this.members.add(user);
     }
 }

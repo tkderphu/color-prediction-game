@@ -31,7 +31,7 @@ public class LoginFram2 extends JFrame {
         }
 
         try {
-            Map<String, Object> payload = new HashMap<>();
+            Map<String, String> payload = new HashMap<>();
             payload.put("username", username);
             payload.put("password", password);
             net.send("LOGIN", payload);

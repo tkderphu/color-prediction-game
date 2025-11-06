@@ -1,7 +1,8 @@
 package site.viosmash.client.ui;
 
 import site.viosmash.client.NetClient;
-import site.viosmash.client.utils.User;
+import site.viosmash.common.Match;
+import site.viosmash.common.User;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -16,7 +17,7 @@ public class PlayedHistory extends JFrame {
     private DefaultTableModel model;
     private JTable table;
 
-    public PlayedHistory(NetClient netClient, List<Map<String, Object>> histories) throws IOException {
+    public PlayedHistory(NetClient netClient, List<Match> histories) throws IOException {
         this.client = netClient;
         setTitle("Played Match History");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -44,11 +45,11 @@ public class PlayedHistory extends JFrame {
 
         // --- Populate data ---
         if (histories != null) {
-            for (Map<String, Object> history : histories) {
+            for (Match history : histories) {
                 model.addRow(new Object[]{
-                        history.getOrDefault("id", "N/A"),
-                        history.getOrDefault("room_owner", "Unknown"),
-                        history.getOrDefault("started_at", "Unknown"),
+                        history.getId(),
+                        history.getStartedAt(),
+                        history.getEndedAt(),
                         "View Detail"
                 });
             }
@@ -103,8 +104,8 @@ public class PlayedHistory extends JFrame {
         @Override
         public Object getCellEditorValue() {
             if (clicked) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("matchId", matchId);
+                Map<String, String> map = new HashMap<>();
+                map.put("matchId", matchId + "");
                 try {
                     netClient.send("MATCH_DETAIL", map);
                 } catch (IOException e) {

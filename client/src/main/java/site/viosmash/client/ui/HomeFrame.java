@@ -1,8 +1,7 @@
 package site.viosmash.client.ui;
 
 import site.viosmash.client.NetClient;
-import site.viosmash.client.utils.User;
-import site.viosmash.common.Message;
+import site.viosmash.common.User;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -63,7 +62,7 @@ public class HomeFrame extends javax.swing.JFrame {
         jButton1.setForeground(new java.awt.Color(255, 255, 255));
         jButton1.setText("Lịch sử chơi game");
         jButton1.addActionListener((e) -> {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, String> map = new HashMap<>();
             map.put("username", user.getUsername());
             try {
                 netClient.send("PLAYED_HISTORY", map);

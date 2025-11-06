@@ -1,5 +1,7 @@
 package site.viosmash.client.ui;
 
+import site.viosmash.common.MatchPlayer;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
@@ -11,7 +13,7 @@ import java.util.Map;
  */
 public class LeaderboardFrame extends JFrame {
 
-    public LeaderboardFrame(long matchId, List<Map<String, Object>> leaderboard) {
+    public LeaderboardFrame(long matchId, List<MatchPlayer> leaderboard) {
         setTitle("Leaderboard - Match " + matchId);
         setSize(500, 350);
         setLocationRelativeTo(null);
@@ -33,18 +35,18 @@ public class LeaderboardFrame extends JFrame {
     }
 
     /** Convert leaderboard list to Object[][] for JTable */
-    private Object[][] buildLeaderboardData(List<Map<String, Object>> leaderboard) {
+    private Object[][] buildLeaderboardData(List<MatchPlayer> leaderboard) {
         if (leaderboard == null || leaderboard.isEmpty()) {
             return new Object[0][0];
         }
 
         Object[][] rows = new Object[leaderboard.size()][4];
         for (int i = 0; i < leaderboard.size(); i++) {
-            Map<String, Object> entry = leaderboard.get(i);
+            MatchPlayer player = leaderboard.get(i);
             rows[i][0] = i + 1; // rank (already sorted)
-            rows[i][1] = entry.getOrDefault("username", "Unknown");
-            rows[i][2] = entry.getOrDefault("totalScore", 0);
-            rows[i][3] = entry.getOrDefault("totalTimeMs", 0);
+            rows[i][1] = player.getUser().getUsername();
+            rows[i][2] = player.getTotalScore();
+            rows[i][3] = player.getTotalTimeMs();
         }
         return rows;
     }

@@ -39,17 +39,15 @@ public class ServerCore {
     }
 
     public void broadcastOnlineList() throws IOException {
-        List<Map<String, Object>> players = new ArrayList<>();
+        List<User> players = new ArrayList<>();
         for (Map.Entry<User, ClientHandler> e : lobby.online.entrySet()) {
             User u = e.getKey();
             String st = lobby.status.containsKey(u) ? lobby.status.get(u) : "IDLE";
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("username", u);
-            entry.put("status", st);
-            players.add(entry);
+            u.setStatus(st);
+            players.add(u);
         }
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("players", players);
+        Map<String, String> payload = new HashMap<>();
+        payload.put("players", Json.to(players));
         for (ClientHandler h : lobby.online.values()) {
             h.send("ONLINE_LIST", payload);
         }
@@ -58,7 +56,9 @@ public class ServerCore {
     // Bắt đầu 1 trận 15 vòng
     public void startMatch(Room room) throws Exception {
         Match match = new Match();
+        match.setStartedAt(LocalDateTime.now());
         match.setRoomOwner(room.owner);
+
         int matchId = matchDao.createMatch(match);
         match.setId(matchId);
 
@@ -76,10 +76,10 @@ public class ServerCore {
             lobby.status.put(u, "PLAYING");
             ClientHandler h = lobby.online.get(u);
             if (h != null) {
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("matchId", matchId);
-                payload.put("rounds", 15);
-                payload.put("players", ctx.players);
+                Map<String, String> payload = new HashMap<>();
+                payload.put("matchId", matchId + "");
+                payload.put("rounds", 15 + "");
+                payload.put("players", Json.to(ctx.players));
                 h.send("MATCH_BEGIN", payload);
             }
         }
@@ -117,15 +117,9 @@ public class ServerCore {
                 long serverEpoch = System.currentTimeMillis();
                 ctx.currentRound = new LiveRound(roundId, roundNo, spec, colors, serverEpoch);
 
-                // Gửi ROUND_DATA cho tất cả
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("matchId", ctx.matchId);
-                payload.put("roundNo", roundNo);
-                payload.put("level", spec.level);
-                payload.put("colors", colors);
-                payload.put("showMs", spec.showMs);
-                payload.put("countdownMs", spec.countdownMs);
-                payload.put("serverEpochMs", serverEpoch);
+                Map<String, String> payload = new HashMap<>();
+                payload.put("round", Json.to(round));
+                payload.put("serverEpochMs", serverEpoch + "");
 
                 for (User u : ctx.players) {
                     ClientHandler h = lobby.online.get(u);
@@ -151,7 +145,7 @@ public class ServerCore {
                         roundResult.setSelectedColors(null);
                         roundResult.setScore(score);
                         roundResult.setTimeMs(timeMs);
-                        roundResult.setSentAt(null);
+                        roundResult.setSentAt(LocalDateTime.now());
 
                         roundResultDao.save(roundResult);
 
@@ -173,8 +167,8 @@ public class ServerCore {
                 for (User u : ctx.players) {
                     ClientHandler h = lobby.online.get(u);
                     if (h != null) {
-                        Map<String, Object> rrPayload = new HashMap<>();
-                        rrPayload.put("leaderboard", lb);
+                        Map<String, String> rrPayload = new HashMap<>();
+                        rrPayload.put("leaderboard", Json.to(lb));
                         h.send("UPDATE_TABLE_SCORE", rrPayload);
                     }
                 }
@@ -194,9 +188,9 @@ public class ServerCore {
             for (User u : ctx.players) {
                 ClientHandler h = lobby.online.get(u);
                 if (h != null) {
-                    Map<String, Object> endPayload = new HashMap<>();
-                    endPayload.put("matchId", ctx.matchId);
-                    endPayload.put("finalRanking", finalRank);
+                    Map<String, String> endPayload = new HashMap<>();
+                    endPayload.put("matchId", ctx.matchId + "");
+                    endPayload.put("finalRanking", Json.to(finalRank));
                     h.send("MATCH_END", endPayload);
                 }
                 lobby.status.put(u, "IDLE");
@@ -210,29 +204,21 @@ public class ServerCore {
 
     // Người chơi nộp bài cho vòng hiện tại
     public void handleSubmit(User user, Message m) throws Exception {
-        int matchId = ((Number) m.payload.get("matchId")).intValue();
-        int roundNo = ((Number) m.payload.get("roundNo")).intValue();
-        List<String> selected = Json.mapper().convertValue(
-                m.payload.get("selected"), new TypeReference<List<String>>() {});
-        long clientEpochMs = ((Number) m.payload.get("clientEpochMs")).longValue();
+        RoundResult roundResult = Json.from(m.payload.get("roundResult"), new TypeReference<RoundResult>() {
+        });
 
-        MatchContext ctx = matches.get(matchId);
-        if (ctx == null || ctx.currentRound == null || ctx.currentRound.roundNo != roundNo) return;
+
+        long clientEpochMs = Long.parseLong(m.payload.get("clientEpochMs"));
+
+        MatchContext ctx = matches.get(roundResult.getRound().getMatch().getId());
+        if (ctx == null || ctx.currentRound == null || ctx.currentRound.roundNo != roundResult.getRound().getRoundNo()) return;
 
         long elapsed = Math.max(0, clientEpochMs - ctx.currentRound.serverEpochMs);
         long timeMs = Math.min(elapsed, ctx.currentRound.spec.countdownMs);
 
-        float score = Score.calcScore(selected, ctx.currentRound.colors);
+        float score = Score.calcScore(roundResult.getSelectedColors(), ctx.currentRound.colors);
 
-        String selJson = Json.mapper().writeValueAsString(selected);
-
-        RoundResult roundResult = new RoundResult();
-        Round round = new Round();
-        round.setId(ctx.currentRound.roundId);
-
-        roundResult.setRound(round);
         roundResult.setUser(user);
-        roundResult.setSelectedColors(selected);
         roundResult.setScore(score);
         roundResult.setTimeMs(timeMs);
         roundResult.setSentAt(LocalDateTime.now());
@@ -240,8 +226,7 @@ public class ServerCore {
         roundResultDao.save(roundResult);
 
         MatchPlayer matchPlayer = new MatchPlayer();
-        Match match = new Match();
-        match.setId(matchId);
+        Match match = roundResult.getRound().getMatch();
 
         matchPlayer.setMatch(match);
         matchPlayer.setUser(user);
@@ -254,14 +239,14 @@ public class ServerCore {
     }
 
     public void handleHistory(ClientHandler h, Message m) throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("items", new ArrayList<Object>());
+        Map<String, String> payload = new HashMap<>();
+        payload.put("items", Json.to(new ArrayList<>()));
         h.send("HISTORY_RESPONSE", payload);
     }
 
     public void handleLeaderboard(ClientHandler h, Message m) throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("items", new ArrayList<Object>());
+        Map<String, String> payload = new HashMap<>();
+        payload.put("items", Json.to(new ArrayList<>()));
         h.send("LEADERBOARD_RESPONSE", payload);
     }
 

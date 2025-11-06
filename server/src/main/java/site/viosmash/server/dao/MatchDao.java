@@ -11,7 +11,7 @@ public class MatchDao extends Dao{
     public int createMatch(Match match) throws Exception {
         try (
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO matches(room_owner, started_at) VALUES (?,?)",
+                     "INSERT INTO matches(room_owner_id, started_at) VALUES (?,?)",
                      Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, match.getRoomOwner().getId());
             ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));

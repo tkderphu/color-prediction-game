@@ -10,6 +10,15 @@ public class User {
     private int id;
     private String username;
     private String password;
+    private String status;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public int getId() {
         return id;

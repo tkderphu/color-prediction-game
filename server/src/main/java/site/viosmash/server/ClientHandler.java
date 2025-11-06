@@ -1,6 +1,7 @@
 // server/src/main/java/site/viosmash/server/ClientHandler.java
 package site.viosmash.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import site.viosmash.common.*;
 
 import java.io.*;
@@ -37,7 +38,7 @@ public class ClientHandler implements Runnable {
                 handle(msg);
             }
         } catch (Exception e) {
-            // e.printStackTrace();
+             e.printStackTrace();
         } finally {
             logoutCleanup();
             try {
@@ -85,14 +86,14 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleMatchDetail(Message m) {
-        int matchId  = (int) m.payload.get("matchId");
+        int matchId  = Integer.parseInt(m.payload.get("matchId"));
 
         try {
             List<MatchPlayer> matchPlayers = core.matchPlayerDao.finalRanking(matchId);
 
-            Map<String, Object> map = new HashMap<>();
-            map.put("leaderboard", matchPlayers);
-            map.put("matchId", matchId);
+            Map<String, String> map = new HashMap<>();
+            map.put("leaderboard", Json.to(matchPlayers));
+            map.put("matchId", matchId + "");
             send("MATCH_DETAIL_RESPONSE", map);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -103,8 +104,8 @@ public class ClientHandler implements Runnable {
         //lay danh sach lich su
         String username = (String) m.payload.get("username");
         List<Match> listMatchPlayed = core.matchDao.getListMatchPlayed(this.user.getId());
-        Map<String, Object> map = new HashMap<>();
-        map.put("matchsPlayed", listMatchPlayed);
+        Map<String, String> map = new HashMap<>();
+        map.put("matchsPlayed", Json.to(listMatchPlayed));
         send(
                 "PLAYED_HISTORY_RESPONSE",
                 map
@@ -131,8 +132,10 @@ public class ClientHandler implements Runnable {
         lobby.online.put(this.user, this);
         lobby.status.put(this.user, "IDLE");
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("user", this.user);
+        Map<String, String> payload = new HashMap<>();
+
+        payload.put("status", "IDLE");
+        payload.put("user", Json.to(this.user));
         send("LOGIN_OK", payload);
 
         core.broadcastOnlineList();
@@ -140,8 +143,10 @@ public class ClientHandler implements Runnable {
 
     private void handleInvite(Message m) throws Exception {
         requireLogin();
-        String from = (String)m.payload.get("fromUsername");
-        String to = (String) m.payload.get("toUsername");
+        String toUsername =  m.payload.get("toUsername");
+        User to = lobby.online.entrySet().stream().filter(entry -> {
+            return entry.getKey().getUsername().equals(toUsername);
+        }).findFirst().get().getKey();
         ClientHandler target = lobby.online.get(to);
         if (target == null) {
             sendError("USER_OFFLINE", "Target offline");
@@ -149,7 +154,7 @@ public class ClientHandler implements Runnable {
         }
         Room room = null;
         for(Room r : lobby.rooms.values()) {
-            if(r.members.contains(from)) {
+            if(r.members.contains(this.user)) {
                 room = r;
                 break;
             }
@@ -161,16 +166,18 @@ public class ClientHandler implements Runnable {
             sendRoomUpdate(room, null);
         }
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("fromUsername", from);
+        Map<String, String> payload = new HashMap<>();
+        payload.put("fromUser", Json.to(this.user));
         target.send("INVITE_INCOMING", payload);
     }
 
     private void handleInviteResponse(Message m) throws Exception {
         requireLogin();
-        User from = (User) m.payload.get("fromUser");
-        User invitedUser = (User) m.payload.get("invitedUser");
-        boolean accepted = (Boolean) m.payload.get("accepted");
+        User from = Json.from(m.payload.get("fromUser"), new TypeReference<User>() {
+        });
+        User invitedUser = Json.from(m.payload.get("invitedUser"), new TypeReference<User>() {
+        });
+        boolean accepted = Boolean.parseBoolean( m.payload.get("accepted"));
         Room room = null;
         for(Room r : lobby.rooms.values()) {
             if(r.members.contains(from)) {
@@ -183,7 +190,7 @@ public class ClientHandler implements Runnable {
             return;
         }
         if (!accepted) {
-            Map<String, Object> payload = new HashMap<>();
+            Map<String, String> payload = new HashMap<>();
             payload.put("msg", "You declined invite");
             send("INFO", payload);
             return;
@@ -254,7 +261,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    public synchronized void send(String type, Map<String, Object> payload) throws IOException {
+    public synchronized void send(String type, Map<String, String> payload) throws IOException {
         Message m = new Message();
         m.type = type;
         m.payload = payload;
@@ -265,7 +272,7 @@ public class ClientHandler implements Runnable {
     }
 
     public void sendError(String code, String msg) throws IOException {
-        Map<String, Object> payload = new HashMap<>();
+        Map<String, String> payload = new HashMap<>();
         payload.put("code", code);
         payload.put("msg", msg);
         send("ERROR", payload);
@@ -275,19 +282,19 @@ public class ClientHandler implements Runnable {
         if (this.user == null) throw new Exception("NOT_LOGGED_IN");
     }
 
-    private void sendRoomUpdate(Room room, User usernameLeave) throws IOException {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("owner", room.owner);
-        payload.put("members", new ArrayList<>(room.members));
+    private void sendRoomUpdate(Room room, User userLeave) throws IOException {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("owner", Json.to(room.owner));
+        payload.put("members", Json.to(new ArrayList<>(room.members)));
         for (User u : room.members) {
             ClientHandler h = lobby.online.get(u);
             if (h != null) {
                 h.send("ROOM_UPDATE", payload);
             }
         }
-        if(usernameLeave != null) {
-            payload.put("userLeave", usernameLeave);
-            ClientHandler h = lobby.online.get(usernameLeave);
+        if(userLeave != null) {
+            payload.put("userLeave", Json.to(userLeave));
+            ClientHandler h = lobby.online.get(userLeave);
             if (h != null) {
                 h.send("ROOM_UPDATE", payload);
             }

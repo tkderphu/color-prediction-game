@@ -41,18 +41,21 @@ public class MatchPlayerDao extends Dao{
     public List<MatchPlayer> finalRanking(int matchId) throws Exception {
         try (
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT username, total_score, total_time_ms FROM match_players " +
-                             "WHERE match_id=? ORDER BY total_score DESC, total_time_ms ASC")) {
+                     "SELECT u.username, mp.total_score, mp.total_time_ms " +
+                             "FROM match_players mp " +
+                             "JOIN users u ON mp.user_id = u.id " +
+                             "WHERE mp.match_id = ? " +
+                             "ORDER BY mp.total_score DESC, mp.total_time_ms ASC")) {
             ps.setInt(1, matchId);
             try (ResultSet rs = ps.executeQuery()) {
                 List<MatchPlayer> out = new ArrayList<>();
                 while (rs.next()) {
                     MatchPlayer player = new MatchPlayer();
                     player.setTotalScore( rs.getFloat(2));
-                    player.setTotalTimeMs( rs.getLong(2));
+                    player.setTotalTimeMs( rs.getLong(3));
 
                     User user = new User();
-                    user.setUsername(rs.getString("username"));
+                    user.setUsername(rs.getString(1));
                     player.setUser(user);
 
                     out.add(player);

@@ -13,9 +13,6 @@ public class UserDao extends Dao{
                 String password = rs.getString(3);
                 int id = rs.getInt(1);
                 String username = rs.getString(2);
-                if(BCrypt.checkpw(user.getPassword(), password)) {
-                    return null;
-                }
 
                 User user1 =new User();
                 user1.setPassword(password);
