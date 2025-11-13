@@ -26,14 +26,14 @@ public class PlayedHistory extends JFrame {
         setLayout(new BorderLayout());
 
         // --- Table columns ---
-        String[] columnNames = {"Match ID", "Room Owner", "Started At", "Action"};
+        String[] columnNames = {"Match ID", "Room Owner", "Started At", "Ended At", "Action"};
 
         // --- Table model ---
         model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // Only the "Action" column is editable (for button)
-                return column == 3;
+                return column == 4;
             }
         };
 
@@ -48,6 +48,7 @@ public class PlayedHistory extends JFrame {
             for (Match history : histories) {
                 model.addRow(new Object[]{
                         history.getId(),
+                        history.getRoomOwner().getUsername(),
                         history.getStartedAt(),
                         history.getEndedAt(),
                         "View Detail"

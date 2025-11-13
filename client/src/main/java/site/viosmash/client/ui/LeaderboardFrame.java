@@ -19,7 +19,7 @@ public class LeaderboardFrame extends JFrame {
         setLocationRelativeTo(null);
 
         // Table headers
-        String[] columnNames = {"Rank", "Username", "Total Score", "Total Time (ms)"};
+        String[] columnNames = {"Rank", "Username", "Total Score", "Total Time (s)"};
 
         // Convert leaderboard data to table rows
         Object[][] leaderboardData = buildLeaderboardData(leaderboard);
@@ -46,7 +46,7 @@ public class LeaderboardFrame extends JFrame {
             rows[i][0] = i + 1; // rank (already sorted)
             rows[i][1] = player.getUser().getUsername();
             rows[i][2] = player.getTotalScore();
-            rows[i][3] = player.getTotalTimeMs();
+            rows[i][3] = (player.getTotalTimeMs() * 1.0)/1000;
         }
         return rows;
     }
