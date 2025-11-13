@@ -114,6 +114,7 @@ public class ServerCore {
                 round.setCountDownMs(spec.countdownMs);
 
                 int roundId = roundDao.createRound(round);
+                round.setId(roundId);
                 long serverEpoch = System.currentTimeMillis();
                 ctx.currentRound = new LiveRound(roundId, roundNo, spec, colors, serverEpoch);
 
@@ -223,6 +224,7 @@ public class ServerCore {
         roundResult.setTimeMs(timeMs);
         roundResult.setSentAt(LocalDateTime.now());
 
+
         roundResultDao.save(roundResult);
 
         MatchPlayer matchPlayer = new MatchPlayer();
@@ -250,7 +252,6 @@ public class ServerCore {
         h.send("LEADERBOARD_RESPONSE", payload);
     }
 
-    // --- Helper classes ---
     public static class RoundSpec {
         public final String level;
         public final int colorCount;

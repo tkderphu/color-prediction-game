@@ -77,7 +77,7 @@ public class GameFrame extends JFrame {
         }
 
         left.add(new JScrollPane(table), BorderLayout.CENTER);
-        left.setPreferredSize(new Dimension(300, 0));
+        left.setPreferredSize(new Dimension(400, 0));
 
         return left;
     }
@@ -233,8 +233,6 @@ public class GameFrame extends JFrame {
             case "MAGENTA": return Color.MAGENTA;
             case "PINK": return Color.PINK;
             case "GRAY": return Color.GRAY;
-            case "LIGHT_GRAY": return Color.LIGHT_GRAY;
-            case "DARK_GRAY": return Color.DARK_GRAY;
             case "BLACK": return Color.BLACK;
             case "WHITE": return Color.WHITE;
             case "BROWN": return new Color(139, 69, 19);

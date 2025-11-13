@@ -2,7 +2,6 @@
 package site.viosmash.client;
 
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import site.viosmash.client.ui.*;
 import site.viosmash.common.*;
@@ -11,7 +10,6 @@ import javax.swing.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class ClientApp {
     private final NetClient net = new NetClient();
@@ -22,6 +20,7 @@ public class ClientApp {
     private User user;
     private PlayedHistory playedHistory;
     private LeaderboardFrame leaderboardFrame;
+    private RoundDetailFrame roundDetailFrame;
     public void start() throws Exception {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -36,6 +35,14 @@ public class ClientApp {
 
     private void onMessage(Message m) {
         switch (m.type) {
+            case "ROUND_DETAIL_RESPONSE":
+                List<RoundResult> results = Json.from(m.payload.get("roundDetail"), new TypeReference<List<RoundResult>>() {});
+                roundDetailFrame = new RoundDetailFrame(
+                        Integer.parseInt(m.payload.get("matchId")),
+                        results
+                );
+                roundDetailFrame.setVisible(true);
+                break;
             case "MATCH_DETAIL_RESPONSE":
                 List<MatchPlayer> leaderboardObject = Json.from(m.payload.get("leaderboard"), new TypeReference<List<MatchPlayer>>() {});
                 leaderboardFrame = new LeaderboardFrame(
@@ -90,7 +97,7 @@ public class ClientApp {
                 if(m.payload.containsKey("userLeave")) {
                     User userLeave = Json.from(m.payload.get("userLeave"), new TypeReference<User>() {
                     });
-                    if(userLeave.equals(this.user.getUsername())) {
+                    if(userLeave.equals(this.user)) {
                         lobby.dispose();
                         homeFrame.setVisible(true);
                         return;
@@ -102,6 +109,10 @@ public class ClientApp {
                 });
                 if (lobby != null) {
                     lobby.onRoomUpdate(owner, members);
+                    if(!lobby.isVisible()) {
+                        lobby.setVisible(true);
+                        homeFrame.dispose();
+                    }
                 }
                 if (game != null) game.setMembers(members);
                 break;

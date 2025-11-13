@@ -14,12 +14,12 @@ import java.util.Map;
 public class LeaderboardFrame extends JFrame {
 
     public LeaderboardFrame(long matchId, List<MatchPlayer> leaderboard) {
-        setTitle("Leaderboard - Match " + matchId);
+        setTitle("Bảng xếp hạng của trận đấu: " + matchId);
         setSize(500, 350);
         setLocationRelativeTo(null);
 
         // Table headers
-        String[] columnNames = {"Rank", "Username", "Total Score", "Total Time (s)"};
+        String[] columnNames = {"Hạng", "Người chơi", "Tổng số điểm", "Tổng thời gian (s)"};
 
         // Convert leaderboard data to table rows
         Object[][] leaderboardData = buildLeaderboardData(leaderboard);

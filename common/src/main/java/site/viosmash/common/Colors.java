@@ -6,16 +6,15 @@ import java.util.List;
 public class Colors {
     public static final String[] BASE = {
             "RED","GREEN","BLUE","YELLOW","ORANGE","CYAN","PINK","GRAY",
-            "BLACK","WHITE","MAGENTA","LIGHT_GRAY","DARK_GRAY","BROWN",
-            "LIME","OLIVE","PURPLE","NAVY","TEAL","MAROON","SALMON",
+            "BLACK","WHITE","MAGENTA","BROWN",
+            "OLIVE","PURPLE","NAVY","TEAL","MAROON","SALMON",
             "CORAL","GOLD","INDIGO","TURQUOISE","VIOLET"
     };
 
     public static final Color[] COLORS = {
             Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.ORANGE,
             Color.CYAN, Color.PINK, Color.GRAY, Color.BLACK, Color.WHITE,
-            Color.MAGENTA, Color.LIGHT_GRAY, Color.DARK_GRAY, new Color(139,69,19), // BROWN
-            new Color(0,255,0), // LIME
+            Color.MAGENTA, new Color(139,69,19), // BROWN
             new Color(128,128,0), // OLIVE
             new Color(128,0,128), // PURPLE
             new Color(0,0,128), // NAVY

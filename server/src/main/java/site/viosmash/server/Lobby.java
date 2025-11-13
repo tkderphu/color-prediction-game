@@ -21,6 +21,7 @@ public class Lobby {
         if (r != null && !r.members.isEmpty()) {
             for(User member: r.members) {
                 r.owner = member;
+                rooms.put(member, r);
                return;
             }
         }

@@ -35,7 +35,9 @@ public class NetClient {
                 Message m = Json.from(line, Message.class);
                 if (onMessage != null) onMessage.accept(m);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
+        }
     }
 
     public synchronized void send(String type, Map<String,String > payload) throws IOException {

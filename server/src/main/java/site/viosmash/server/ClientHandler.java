@@ -49,6 +49,9 @@ public class ClientHandler implements Runnable {
 
     private void handle(Message m) throws Exception {
         switch (m.type) {
+            case "ROUND_DETAIL":
+                handleGetRoundHistoryDetail(m);
+                break;
             case "MATCH_DETAIL":
                 handleMatchDetail(m);
                 break;
@@ -82,6 +85,20 @@ public class ClientHandler implements Runnable {
             default:
                 sendError("UNKNOWN_TYPE", "Unknown message type: " + m.type);
                 break;
+        }
+    }
+
+    private void handleGetRoundHistoryDetail(Message m) {
+        int matchId  = Integer.parseInt(m.payload.get("matchId"));
+        List<RoundResult> roundResults = core.roundResultDao.getListByMatchId(matchId, this.user.getId());
+
+        try {
+            Map<String, String> map = new HashMap<>();
+            map.put("roundDetail", Json.to(roundResults));
+            map.put("matchId", matchId + "");
+            send("ROUND_DETAIL_RESPONSE", map);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -222,12 +239,27 @@ public class ClientHandler implements Runnable {
             }
         }
         if (theRoom == null) {
-           return;
+            Map<String, String> payload = new HashMap<>();
+            payload.put("userLeave", Json.to(this.user));
+            ClientHandler h = lobby.online.get(this.user);
+            if (h != null) {
+                h.send("ROOM_UPDATE", payload);
+            }
+            return;
         };
 
 
 
         theRoom.members.remove(this.user);
+        if(this.user.equals(theRoom.owner)) {
+            if(!theRoom.members.isEmpty()) {
+                Room room = lobby.rooms.get(this.user);
+                room.owner = room.members.stream().findFirst().get();
+
+                lobby.rooms.remove(this.user);
+                lobby.rooms.put(room.owner, room);
+            }
+        }
         lobby.dissolveIfEmpty(theRoom.owner);
         sendRoomUpdate(theRoom, this.user);
     }

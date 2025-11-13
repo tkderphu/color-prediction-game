@@ -26,14 +26,14 @@ public class PlayedHistory extends JFrame {
         setLayout(new BorderLayout());
 
         // --- Table columns ---
-        String[] columnNames = {"Match ID", "Room Owner", "Started At", "Ended At", "Action"};
+        String[] columnNames = {"Mã", "Chủ phòng", "Thời gian bắt đầu", "Thời gian kết thúc", "Bảng xếp hạng", "Chi tiết vòng đấu"};
 
         // --- Table model ---
         model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // Only the "Action" column is editable (for button)
-                return column == 4;
+                return column == 4 || column == 5;
             }
         };
 
@@ -51,14 +51,21 @@ public class PlayedHistory extends JFrame {
                         history.getRoomOwner().getUsername(),
                         history.getStartedAt(),
                         history.getEndedAt(),
-                        "View Detail"
+                        "Xem",
+                        "Xem"
                 });
             }
         }
 
         // --- Button Renderer & Editor ---
-        table.getColumn("Action").setCellRenderer(new ButtonRenderer());
-        table.getColumn("Action").setCellEditor(new ButtonEditor(new JCheckBox(), netClient));
+        table.getColumn("Bảng xếp hạng").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Bảng xếp hạng").setCellEditor(new ButtonEditor(new JCheckBox(), netClient, "leaderboard"));
+
+
+        // --- Button Renderer & Editor ---
+        table.getColumn("Chi tiết vòng đấu").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Chi tiết vòng đấu").setCellEditor(new ButtonEditor(new JCheckBox(), netClient, "round_detail"));
+
 
         // --- Scroll pane ---
         JScrollPane scrollPane = new JScrollPane(table);
@@ -75,7 +82,7 @@ public class PlayedHistory extends JFrame {
         @Override
         public Component getTableCellRendererComponent(
                 JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            setText(value == null ? "View Detail" : value.toString());
+            setText(value == null ? "Chi tiết" : value.toString());
             return this;
         }
     }
@@ -86,11 +93,13 @@ public class PlayedHistory extends JFrame {
         private int matchId;
         private boolean clicked;
         private NetClient netClient;
-        public ButtonEditor(JCheckBox checkBox, NetClient netClient) {
+        private String type;
+        public ButtonEditor(JCheckBox checkBox, NetClient netClient, String type) {
             super(checkBox);
-            button = new JButton("View Detail");
+            button = new JButton("Chi tiết");
             button.setOpaque(true);
             this.netClient = netClient;
+            this.type = type;
             button.addActionListener(e -> fireEditingStopped());
         }
 
@@ -105,17 +114,27 @@ public class PlayedHistory extends JFrame {
         @Override
         public Object getCellEditorValue() {
             if (clicked) {
-                Map<String, String> map = new HashMap<>();
-                map.put("matchId", matchId + "");
-                try {
-                    netClient.send("MATCH_DETAIL", map);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                if(type.equals("leaderboard")) {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("matchId", matchId + "");
+                    try {
+                        netClient.send("MATCH_DETAIL", map);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("matchId", matchId + "");
+                    try {
+                        netClient.send("ROUND_DETAIL", map);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 //                new LeaderboardFrame(matchId).setVisible(true);
             }
             clicked = false;
-            return "View Detail";
+            return "Chi tiết";
         }
 
         @Override
