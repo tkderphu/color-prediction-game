@@ -17,9 +17,9 @@ public class LobbyFrame extends JFrame {
     private final NetClient net;
     private final DefaultListModel<String> onlineModel = new DefaultListModel<>();
     private final DefaultListModel<String> roomModel = new DefaultListModel<>();
-    private final JButton inviteBtn = createStyledButton("🎮 Mời chơi", new Color(46, 204, 113));
-    private final JButton startBtn = createStyledButton("🚀 Bắt đầu (chủ phòng)", new Color(52, 152, 219));
-    private final JButton leaveBtn = createStyledButton("🚪 Thoát phòng", new Color(231, 76, 60));
+    private final JButton inviteBtn = createStyledButton("Mời chơi", new Color(46, 204, 113));
+    private final JButton startBtn = createStyledButton("Bắt đầu (chủ phòng)", new Color(52, 152, 219));
+    private final JButton leaveBtn = createStyledButton("Thoát phòng", new Color(231, 76, 60));
     private final User user;
     private final JLabel statusLabel = new JLabel("Đang kết nối...", JLabel.CENTER);
     private JList<String> onlineList;
@@ -75,7 +75,7 @@ public class LobbyFrame extends JFrame {
         header.setBackground(new Color(52, 73, 94));
         header.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
-        JLabel titleLabel = new JLabel("🎯 CGO Game Lobby", JLabel.LEFT);
+        JLabel titleLabel = new JLabel("Phòng chờ", JLabel.LEFT);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(Color.WHITE);
 
@@ -102,7 +102,7 @@ public class LobbyFrame extends JFrame {
                 new EmptyBorder(15, 15, 15, 15)
         ));
 
-        JLabel title = new JLabel("👥 Người chơi trực tuyến");
+        JLabel title = new JLabel("Người chơi trực tuyến");
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
         title.setForeground(new Color(44, 62, 80));
         panel.add(title, BorderLayout.NORTH);
@@ -131,7 +131,7 @@ public class LobbyFrame extends JFrame {
                 new EmptyBorder(15, 15, 15, 15)
         ));
 
-        JLabel title = new JLabel("🏠 Thành viên phòng");
+        JLabel title = new JLabel("Thành viên phòng");
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
         title.setForeground(new Color(44, 62, 80));
         panel.add(title, BorderLayout.NORTH);
@@ -157,6 +157,8 @@ public class LobbyFrame extends JFrame {
 
         statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         statusLabel.setForeground(new Color(127, 140, 141));
+        // Add margin below statusLabel
+        statusLabel.setBorder(new EmptyBorder(0, 0, 10, 0));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         buttonPanel.setBackground(new Color(240, 242, 245));
@@ -168,6 +170,7 @@ public class LobbyFrame extends JFrame {
 
         return panel;
     }
+
 
     private JButton createStyledButton(String text, Color bgColor) {
         JButton button = new JButton(text) {
@@ -369,7 +372,7 @@ public class LobbyFrame extends JFrame {
                 String st = p.getStatus();
                 if (!u.equals(user.getUsername())) {
                     String statusText = "online".equals(st) ? "trực tuyến" :
-                            "ingame".equals(st) ? "đang chơi" : "không hoạt động";
+                            "ingame".equals(st) ? "đang chơi" : "đang rảnh";
                     onlineModel.addElement(u + " (" + statusText + ")");
                 }
             }

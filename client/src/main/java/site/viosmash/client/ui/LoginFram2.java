@@ -54,7 +54,7 @@ public class LoginFram2 extends JFrame {
     private void initComponents() {
 
 
-        Color primaryColor = new Color(184, 134, 11);
+        Color primaryColor = new Color(200, 134, 11);
         Color secondaryColor = Color.WHITE;
         Color accentColor = new Color(255, 255, 200);
         Color dividerColor = new Color(255, 255, 255, 180);
@@ -223,11 +223,11 @@ public class LoginFram2 extends JFrame {
 
         jLabel4.setFont(new java.awt.Font("Segoe UI", Font.PLAIN, 14));
         jLabel4.setForeground(secondaryColor);
-        jLabel4.setText("Bạn chưa có tài khoản?");
+//        jLabel4.setText("Bạn chưa có tài khoản?");
 
         jLabel5.setFont(new java.awt.Font("Segoe UI", Font.BOLD, 14));
         jLabel5.setForeground(accentColor);
-        jLabel5.setText("Đăng ký");
+//        jLabel5.setText("Đăng ký");
         jLabel5.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
         jPanel4.add(jLabel4);

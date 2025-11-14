@@ -129,7 +129,7 @@ public class LobbyFrame2 extends JFrame {
         header.setBackground(new Color(52, 73, 94));
         header.setBorder(new EmptyBorder(10, 15, 10, 15));
 
-        JLabel titleLabel = new JLabel("🎯 Phòng Chờ Color Memory", JLabel.LEFT);
+        JLabel titleLabel = new JLabel("Phòng Chờ Color Memory", JLabel.LEFT);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(Color.WHITE);
 

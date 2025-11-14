@@ -271,6 +271,7 @@ public class GameFrame extends JFrame {
             startHideTimer(round.getShowMs());
             startCountdown(round.getCountDownMs());
 
+            submitBtn.setText("Gửi kết quả");
             submitBtn.setEnabled(true);
             chooseColorBtn.setEnabled(true);
             revalidate();
@@ -398,7 +399,7 @@ public class GameFrame extends JFrame {
             chooseColorBtn.setEnabled(false);
 
             // Show loading state
-            submitBtn.setText("⏳ Đang gửi...");
+            submitBtn.setText("Đang gửi...");
 
         } catch (Exception ex) {
             showMessage("Lỗi khi gửi kết quả!", "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -421,7 +422,7 @@ public class GameFrame extends JFrame {
 
     public void onRoundResult(Map<String, Object> payload) {
         SwingUtilities.invokeLater(() -> {
-            submitBtn.setText("🚀 Gửi kết quả");
+            submitBtn.setText("Gửi kết quả");
             submitBtn.setEnabled(true);
             chooseColorBtn.setEnabled(true);
 

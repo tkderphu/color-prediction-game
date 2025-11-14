@@ -36,32 +36,37 @@ public class LeaderboardFrame extends JFrame {
         Color backgroundColor = new Color(255, 246, 195);
         Color headerColor = new Color(220, 120, 50);
         Color headerTextColor = Color.WHITE;
-        Color goldColor = new Color(255, 215, 0);
-        Color silverColor = new Color(192, 192, 192);
-        Color bronzeColor = new Color(205, 127, 50);
-
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10)) {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
 
+                Graphics2D g2 = (Graphics2D) g.create();
+
+                // 1. Draw background normally
                 try {
                     ImageIcon backgroundImage = new ImageIcon(getClass().getResource("/background.jpg"));
-                    g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                    g2.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
                 } catch (Exception e) {
-
-                    g.setColor(backgroundColor);
-                    g.fillRect(0, 0, getWidth(), getHeight());
+                    g2.setColor(backgroundColor);
+                    g2.fillRect(0, 0, getWidth(), getHeight());
                 }
+
+                // 2. Draw overlay (darken background to highlight text)
+                float overlayOpacity = 0.45f; // adjust 0.25 - 0.45 if needed
+                g2.setComposite(AlphaComposite.SrcOver.derive(overlayOpacity));
+                g2.setColor(Color.BLACK);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                g2.dispose();
             }
         };
         mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-
-        JLabel titleLabel = new JLabel("🏆 Bảng Xếp Hạng - Trận #" + matchId, JLabel.CENTER);
+        JLabel titleLabel = new JLabel("Bảng Xếp Hạng - Trận #" + matchId, JLabel.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        titleLabel.setForeground(new Color(60, 60, 60));
+        titleLabel.setForeground(Color.WHITE);
         titleLabel.setBorder(new EmptyBorder(0, 0, 20, 0));
 
         String[] columnNames = {"Hạng", "Tên người chơi", "Tổng điểm", "Thời gian (s)"};
@@ -116,24 +121,24 @@ public class LeaderboardFrame extends JFrame {
 
                 if (!isSelected) {
                     if (row % 2 == 0) {
-                        setBackground(new Color(255, 255, 255, 230));
+                        setBackground(new Color(255, 255, 255, 220));
                     } else {
-                        setBackground(new Color(248, 249, 250));
+                        setBackground(new Color(245, 245, 245, 220));
                     }
                 }
 
                 if (row == 0) {
                     setBackground(new Color(255, 248, 225));
                     setFont(new Font("Segoe UI", Font.BOLD, 14));
-                    if (column == 0) setText("🥇 " + value);
+                    if (column == 0) setText("" + value);
                 } else if (row == 1) {
                     setBackground(new Color(248, 248, 248));
                     setFont(new Font("Segoe UI", Font.BOLD, 14));
-                    if (column == 0) setText("🥈 " + value);
+                    if (column == 0) setText("" + value);
                 } else if (row == 2) {
                     setBackground(new Color(255, 245, 238));
                     setFont(new Font("Segoe UI", Font.BOLD, 14));
-                    if (column == 0) setText("🥉 " + value);
+                    if (column == 0) setText("" + value);
                 } else {
                     if (column == 0) setText(value + ".");
                 }
@@ -142,12 +147,10 @@ public class LeaderboardFrame extends JFrame {
             }
         });
 
-
         leaderboardTable.getColumnModel().getColumn(0).setPreferredWidth(80);
         leaderboardTable.getColumnModel().getColumn(1).setPreferredWidth(200);
         leaderboardTable.getColumnModel().getColumn(2).setPreferredWidth(120);
         leaderboardTable.getColumnModel().getColumn(3).setPreferredWidth(120);
-
 
         JScrollPane scrollPane = new JScrollPane(leaderboardTable);
         scrollPane.setBorder(BorderFactory.createCompoundBorder(
@@ -156,7 +159,6 @@ public class LeaderboardFrame extends JFrame {
         ));
         scrollPane.getViewport().setBackground(Color.WHITE);
         scrollPane.setOpaque(false);
-
 
         JPanel statsPanel = createStatsPanel(leaderboard);
 
@@ -191,15 +193,15 @@ public class LeaderboardFrame extends JFrame {
             float maxScore = leaderboard.get(0).getTotalScore();
             String winner = leaderboard.get(0).getUser().getUsername();
 
-            JLabel playersLabel = createStatLabel("👥 Tổng số người chơi: " + totalPlayers);
-            JLabel winnerLabel = createStatLabel("🏆 Người chiến thắng: " + winner);
-            JLabel scoreLabel = createStatLabel("⭐ Điểm cao nhất: " + maxScore);
+            JLabel playersLabel = createStatLabel("Tổng số người chơi: " + totalPlayers);
+            JLabel winnerLabel = createStatLabel("Người chiến thắng: " + winner);
+            JLabel scoreLabel = createStatLabel("Điểm cao nhất: " + maxScore);
 
             statsPanel.add(playersLabel);
             statsPanel.add(winnerLabel);
             statsPanel.add(scoreLabel);
         } else {
-            JLabel noDataLabel = createStatLabel("📊 Không có dữ liệu thống kê");
+            JLabel noDataLabel = createStatLabel("Không có dữ liệu thống kê");
             statsPanel.add(noDataLabel);
         }
 
@@ -209,12 +211,12 @@ public class LeaderboardFrame extends JFrame {
     private JLabel createStatLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        label.setForeground(new Color(80, 80, 80));
+        label.setForeground(Color.WHITE);
         label.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 120, 50), 1),
                 BorderFactory.createEmptyBorder(8, 15, 8, 15)
         ));
-        label.setBackground(new Color(255, 255, 255, 200));
+        label.setBackground(new Color(220, 120, 50));
         label.setOpaque(true);
         return label;
     }
@@ -242,7 +244,6 @@ public class LeaderboardFrame extends JFrame {
         button.setPreferredSize(new Dimension(120, 40));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 button.setBackground(bgColor.darker());
@@ -255,7 +256,6 @@ public class LeaderboardFrame extends JFrame {
         return button;
     }
 
-    /** Convert leaderboard list to Object[][] for JTable */
     private Object[][] buildLeaderboardData(List<MatchPlayer> leaderboard) {
         if (leaderboard == null || leaderboard.isEmpty()) {
             return new Object[][] {
@@ -269,12 +269,10 @@ public class LeaderboardFrame extends JFrame {
             rows[i][0] = i + 1;
             rows[i][1] = player.getUser().getUsername();
             rows[i][2] = player.getTotalScore();
-
             rows[i][3] = String.format("%.2f", player.getTotalTimeMs() / 1000.0);
         }
         return rows;
     }
-
 
     public void setBackgroundImage(String imagePath) {
         repaint();

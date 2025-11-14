@@ -5,7 +5,6 @@ import site.viosmash.common.User;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,21 +48,38 @@ public class HomeFrame extends javax.swing.JFrame {
         Color titleColor = new Color(60, 60, 60);
         Color textColor = new Color(80, 80, 80);
 
+        // --------------------------------------------------------
+        // UPDATED PANEL: Background image + dark overlay
+        // --------------------------------------------------------
         jPanel1 = new javax.swing.JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+
+                // 1. Draw the background image normally (no opacity change)
                 try {
-                    ImageIcon backgroundImage = new ImageIcon(getClass().getResource("/background.jpg"));
-                    g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                    Image image = new ImageIcon(getClass().getResource("/background.jpg")).getImage();
+                    g2.drawImage(image, 0, 0, getWidth(), getHeight(), this);
                 } catch (Exception e) {
-                    g.setColor(backgroundColor);
-                    g.fillRect(0, 0, getWidth(), getHeight());
+                    g2.setColor(backgroundColor);
+                    g2.fillRect(0, 0, getWidth(), getHeight());
                 }
+
+                // 2. Add dark overlay to highlight foreground text
+                float overlayOpacity = 0.35f;  // change to 0.25–0.45 depending on preference
+                g2.setComposite(AlphaComposite.SrcOver.derive(overlayOpacity));
+                g2.setColor(Color.BLACK);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                g2.dispose();
             }
         };
+        // --------------------------------------------------------
+
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
+
         jButton1 = new javax.swing.JButton() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -75,6 +91,7 @@ public class HomeFrame extends javax.swing.JFrame {
                 g2.dispose();
             }
         };
+
         jButton3 = new javax.swing.JButton() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -100,12 +117,12 @@ public class HomeFrame extends javax.swing.JFrame {
         mainPanel.setBorder(BorderFactory.createEmptyBorder(50, 100, 50, 100));
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", Font.BOLD, 20));
-        jLabel1.setForeground(textColor);
+        jLabel1.setForeground(Color.WHITE);
         jLabel1.setAlignmentX(Component.CENTER_ALIGNMENT);
         jLabel1.setText("tên đăng nhập");
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", Font.BOLD, 36));
-        jLabel2.setForeground(titleColor);
+        jLabel2.setForeground(Color.WHITE);
         jLabel2.setAlignmentX(Component.CENTER_ALIGNMENT);
         jLabel2.setText("Trang chủ");
         jLabel2.setBorder(BorderFactory.createEmptyBorder(20, 0, 50, 0));
@@ -126,7 +143,6 @@ public class HomeFrame extends javax.swing.JFrame {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 jButton1.setBackground(buttonHoverColor);
             }
-
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 jButton1.setBackground(buttonColor);
             }
@@ -158,7 +174,6 @@ public class HomeFrame extends javax.swing.JFrame {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 jButton3.setBackground(buttonHoverColor);
             }
-
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 jButton3.setBackground(buttonColor);
             }

@@ -46,17 +46,14 @@ public class PlayedHistory extends JFrame {
         Color buttonColor = new Color(74, 144, 226);
         Color buttonHoverColor = new Color(65, 130, 210);
 
-
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10)) {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-
                 try {
-                    ImageIcon backgroundImage = new ImageIcon(getClass().getResource("/background.jpg"));
-                    g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                    ImageIcon bg = new ImageIcon(getClass().getResource("/background.jpg"));
+                    g.drawImage(bg.getImage(), 0, 0, getWidth(), getHeight(), this);
                 } catch (Exception e) {
-
                     g.setColor(backgroundColor);
                     g.fillRect(0, 0, getWidth(), getHeight());
                 }
@@ -64,15 +61,12 @@ public class PlayedHistory extends JFrame {
         };
         mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-
-        JLabel titleLabel = new JLabel("📊 Lịch sử trận đấu", JLabel.CENTER);
+        JLabel titleLabel = new JLabel("Lịch sử trận đấu", JLabel.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        titleLabel.setForeground(new Color(60, 60, 60));
+        titleLabel.setForeground(Color.WHITE); // DARKER TEXT FOR BETTER VISIBILITY
         titleLabel.setBorder(new EmptyBorder(0, 0, 20, 0));
 
-
         String[] columnNames = {"ID Trận", "Chủ phòng", "Bắt đầu", "Kết thúc", "Chi tiết"};
-
 
         model = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -86,7 +80,6 @@ public class PlayedHistory extends JFrame {
             }
         };
 
-
         if (histories != null && !histories.isEmpty()) {
             for (Match history : histories) {
                 model.addRow(new Object[]{
@@ -98,27 +91,24 @@ public class PlayedHistory extends JFrame {
                 });
             }
         } else {
-
             model.addRow(new Object[]{"", "Không có dữ liệu", "", "", ""});
         }
 
-
         table = new JTable(model);
         table.setRowHeight(40);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setFont(new Font("Segoe UI", Font.BOLD, 15)); // MORE BOLD
+        table.setForeground(new Color(20, 20, 20)); // MUCH DARKER TEXT
         table.setSelectionBackground(new Color(220, 120, 50, 100));
         table.setSelectionForeground(Color.BLACK);
         table.setGridColor(new Color(200, 200, 200));
         table.setShowGrid(true);
         table.setIntercellSpacing(new Dimension(1, 1));
 
-
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 15));
         header.setBackground(headerColor);
         header.setForeground(headerTextColor);
         header.setPreferredSize(new Dimension(header.getWidth(), 40));
-
 
         header.setDefaultRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -128,44 +118,48 @@ public class PlayedHistory extends JFrame {
                 setBackground(headerColor);
                 setForeground(headerTextColor);
                 setHorizontalAlignment(JLabel.CENTER);
-                setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(0, 0, 2, 1, new Color(200, 200, 200)),
-                        BorderFactory.createEmptyBorder(0, 10, 0, 10)
-                ));
+                setBorder(BorderFactory.createMatteBorder(0, 0, 2, 1, new Color(200, 200, 200)));
                 return this;
             }
         });
 
-
+        // -------- STRONGER TEXT HIGHLIGHT --------
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {
-                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                setHorizontalAlignment(JLabel.CENTER);
-                setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
 
+                label.setHorizontalAlignment(JLabel.CENTER);
+                label.setFont(new Font("Segoe UI", Font.BOLD, 15));
+                label.setForeground(new Color(10, 10, 10)); // SUPER DARK → more visible
+
+                // add subtle shadow (improves readability even on bright backgrounds)
+//                label.setUI(new javax.swing.plaf.basic.BasicLabelUI() {
+//                    @Override
+//                    public void paint(Graphics g, JComponent c) {
+//                        Graphics2D g2 = (Graphics2D) g.create();
+//                        g2.setColor(new Color(255, 255, 255, 140)); // white shadow
+//                        g2.drawString(label.getText(), 1, c.getHeight() - 11);
+//                        g2.dispose();
+//                        super.paint(g, c);
+//                    }
+//                });
 
                 if (!isSelected) {
-                    if (row % 2 == 0) {
-                        setBackground(rowColor);
-                    } else {
-                        setBackground(alternateRowColor);
-                    }
+                    label.setBackground(row % 2 == 0 ? rowColor : alternateRowColor);
                 }
-                return this;
+                return label;
             }
         };
-
 
         for (int i = 0; i < table.getColumnCount() - 1; i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-
         table.getColumn("Chi tiết").setCellRenderer(new ButtonRenderer(buttonColor, buttonHoverColor));
         table.getColumn("Chi tiết").setCellEditor(new ButtonEditor(new JCheckBox(), client, buttonColor, buttonHoverColor));
-
 
         table.getColumnModel().getColumn(0).setPreferredWidth(80);
         table.getColumnModel().getColumn(1).setPreferredWidth(150);
@@ -173,24 +167,17 @@ public class PlayedHistory extends JFrame {
         table.getColumnModel().getColumn(3).setPreferredWidth(180);
         table.getColumnModel().getColumn(4).setPreferredWidth(120);
 
-
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
-        ));
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         scrollPane.getViewport().setBackground(Color.WHITE);
         scrollPane.setOpaque(false);
-
 
         JButton closeButton = createStyledButton("Đóng", new Color(108, 117, 125));
         closeButton.addActionListener(e -> dispose());
 
-
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setOpaque(false);
         buttonPanel.add(closeButton);
-
 
         mainPanel.add(titleLabel, BorderLayout.NORTH);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
@@ -222,12 +209,10 @@ public class PlayedHistory extends JFrame {
         button.setForeground(Color.WHITE);
         button.setBackground(bgColor);
         button.setFocusPainted(false);
-        button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setOpaque(false);
         button.setPreferredSize(new Dimension(120, 40));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
 
         button.addMouseListener(new MouseAdapter() {
             @Override
@@ -243,7 +228,6 @@ public class PlayedHistory extends JFrame {
 
         return button;
     }
-
 
     class ButtonRenderer extends JButton implements TableCellRenderer {
         private Color normalColor;
@@ -266,17 +250,10 @@ public class PlayedHistory extends JFrame {
         public Component getTableCellRendererComponent(
                 JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             setText(value == null ? "Xem chi tiết" : value.toString());
-
-
-            if (hasFocus) {
-                setBackground(hoverColor);
-            } else {
-                setBackground(normalColor);
-            }
+//            setBackground(hasFocus ? hoverColor : normalColor);
             return this;
         }
     }
-
 
     class ButtonEditor extends DefaultCellEditor {
         private final JButton button;
@@ -308,10 +285,9 @@ public class PlayedHistory extends JFrame {
         @Override
         public Component getTableCellEditorComponent(
                 JTable table, Object value, boolean isSelected, int row, int column) {
-            String matchIdStr = table.getValueAt(row, 0).toString().replace("#", "");
-            matchId = Integer.parseInt(matchIdStr);
+            matchId = Integer.parseInt(table.getValueAt(row, 0).toString().replace("#", ""));
             clicked = true;
-            button.setBackground(hoverColor);
+//            button.setBackground(hoverColor);
             return button;
         }
 
@@ -339,7 +315,6 @@ public class PlayedHistory extends JFrame {
             return super.stopCellEditing();
         }
     }
-
 
     public void setBackgroundImage(String imagePath) {
         repaint();
