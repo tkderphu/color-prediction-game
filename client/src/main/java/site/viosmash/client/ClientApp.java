@@ -20,7 +20,7 @@ public class ClientApp {
     private User user;
     private PlayedHistory playedHistory;
     private LeaderboardFrame leaderboardFrame;
-    private RoundDetailFrame roundDetailFrame;
+    private RoundDetailFrame2 roundDetailFrame;
     public void start() throws Exception {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -37,7 +37,7 @@ public class ClientApp {
         switch (m.type) {
             case "ROUND_DETAIL_RESPONSE":
                 List<RoundResult> results = Json.from(m.payload.get("roundDetail"), new TypeReference<List<RoundResult>>() {});
-                roundDetailFrame = new RoundDetailFrame(
+                roundDetailFrame = new RoundDetailFrame2(
                         Integer.parseInt(m.payload.get("matchId")),
                         results
                 );

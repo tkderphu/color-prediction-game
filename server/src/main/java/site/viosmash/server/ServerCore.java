@@ -78,7 +78,7 @@ public class ServerCore {
             if (h != null) {
                 Map<String, String> payload = new HashMap<>();
                 payload.put("matchId", matchId + "");
-                payload.put("rounds", 15 + "");
+                payload.put("rounds", 9 + "");
                 payload.put("players", Json.to(ctx.players));
                 h.send("MATCH_BEGIN", payload);
             }
@@ -96,7 +96,7 @@ public class ServerCore {
 
     private void runMatch(MatchContext ctx) {
         try {
-            for (int roundNo = 1; roundNo <= 15; roundNo++) {
+            for (int roundNo = 1; roundNo <= 9; roundNo++) {
                 RoundSpec spec = RoundSpec.forRound(roundNo);
                 List<String> colors = ColorGen.generate(spec.colorCount);
 
@@ -262,13 +262,13 @@ public class ServerCore {
             this.level = level;
             this.colorCount = colorCount;
             this.showMs = showMs;
-            this.countdownMs = showMs + 5000;
+            this.countdownMs = showMs + 8000;
         }
 
         public static RoundSpec forRound(int r) {
-            if (r <= 5) return new RoundSpec("EASY", 3, 8000);
-            if (r <= 10) return new RoundSpec("MEDIUM", 5, 6500);
-            return new RoundSpec("HARD", 6, 5500);
+            if (r <= 3) return new RoundSpec("EASY", 3, 10000);
+            if (r <= 6) return new RoundSpec("MEDIUM", 5, 8500);
+            return new RoundSpec("HARD", 6, 7000);
         }
     }
 
