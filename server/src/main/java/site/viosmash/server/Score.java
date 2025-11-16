@@ -5,7 +5,7 @@ import java.util.List;
 public class Score {
     // Quy tắc chấm điểm:
     // - Đúng tất cả: +1
-    // - Đúng một phần: +0.2/màu đúng (không vượt 1.0)
+    // - Đúng một phần: +0.15/màu đúng
     public static float calcScore(List<String> answer, List<String> truth) {
         if (answer == null || answer.isEmpty()) return 0.0f;
         int correct = 0;
@@ -19,6 +19,6 @@ public class Score {
         }
 
         if (correct == truth.size()) return 1.0f;
-        return Math.min(1.0f, correct * 0.2f);
+        return Math.min(1.0f, correct * 0.15f);
     }
 }

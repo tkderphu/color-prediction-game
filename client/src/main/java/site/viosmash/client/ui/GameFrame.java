@@ -4,15 +4,16 @@ import site.viosmash.client.NetClient;
 import site.viosmash.common.*;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GameFrame extends JFrame {
 
@@ -20,7 +21,6 @@ public class GameFrame extends JFrame {
     private Round round;
     private long serverEpoch;
 
-    private final DefaultListModel<String> membersModel;
     private final JLabel infoLabel = new JLabel(" ", JLabel.CENTER);
     private final JPanel colorPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
     private final JPanel selectPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
@@ -31,14 +31,14 @@ public class GameFrame extends JFrame {
     private Timer hideTimer, countTimer;
 
     private DefaultTableModel tableModel;
-    private JTable table;
+    private JTable leaderboard;
     private final List<User> players;
 
     public GameFrame(String username, List<User> players, NetClient net, DefaultListModel<String> membersModel) {
         super("🎮 " + username + " - Color Memory Game");
         this.net = net;
         this.players = players;
-        this.membersModel = membersModel;
+//        this.membersModel = membersModel;
 
         setupFrame();
         initComponents();
@@ -125,15 +125,15 @@ public class GameFrame extends JFrame {
             }
         };
 
-        table = new JTable(tableModel);
-        table.setRowHeight(35);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        table.setBackground(new Color(250, 250, 250));
-        table.setGridColor(new Color(200, 200, 200));
-        table.setShowGrid(true);
+        leaderboard = new JTable(tableModel);
+        leaderboard.setRowHeight(35);
+        leaderboard.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        leaderboard.setBackground(new Color(250, 250, 250));
+        leaderboard.setGridColor(new Color(200, 200, 200));
+        leaderboard.setShowGrid(true);
 
         // Table header styling
-        JTableHeader header = table.getTableHeader();
+        JTableHeader header = leaderboard.getTableHeader();
         header.setFont(new Font("Segoe UI", Font.BOLD, 14));
         header.setBackground(new Color(220, 120, 50));
         header.setForeground(Color.WHITE);
@@ -159,14 +159,14 @@ public class GameFrame extends JFrame {
             }
         };
 
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        for (int i = 0; i < leaderboard.getColumnCount(); i++) {
+            leaderboard.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-        JScrollPane scrollPane = new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane(leaderboard);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
         left.add(scrollPane, BorderLayout.CENTER);
-        left.add(new JScrollPane(table), BorderLayout.CENTER);
+        left.add(new JScrollPane(leaderboard), BorderLayout.CENTER);
         left.setPreferredSize(new Dimension(400, 0));
 
         return left;
@@ -626,8 +626,8 @@ public class GameFrame extends JFrame {
     // -------------------- Members List --------------------
     public void setMembers(List<User> ms) {
         SwingUtilities.invokeLater(() -> {
-            membersModel.clear();
-            ms.forEach(r -> membersModel.addElement(r.getUsername()));
+//            membersModel.clear();
+//            ms.forEach(r -> membersModel.addElement(r.getUsername()));
         });
     }
 }

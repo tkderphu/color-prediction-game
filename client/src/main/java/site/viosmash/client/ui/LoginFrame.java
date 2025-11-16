@@ -12,9 +12,9 @@ import java.util.function.Consumer;
  * @author Nguyen Quang Phu
  * @since 02/10/2025
  */
-public class LoginFram2 extends JFrame {
+public class LoginFrame extends JFrame {
     private NetClient net;
-    public LoginFram2(NetClient net, Consumer<Void> onLoggedIn) {
+    public LoginFrame(NetClient net, Consumer<Void> onLoggedIn) {
         super("Đăng nhập");
         initComponents();
         setDefaultCloseOperation(EXIT_ON_CLOSE);

@@ -13,19 +13,19 @@ import java.util.List;
 
 public class ClientApp {
     private final NetClient net = new NetClient();
-    private LoginFram2 login;
+    private LoginFrame login;
     private LobbyFrame lobby;
     private GameFrame game;
     private HomeFrame homeFrame;
     private User user;
     private PlayedHistory playedHistory;
     private LeaderboardFrame leaderboardFrame;
-    private RoundDetailFrame2 roundDetailFrame;
+    private RoundDetailFrame roundDetailFrame;
     public void start() throws Exception {
         SwingUtilities.invokeLater(() -> {
             try {
                 net.connect("localhost", 6000, this::onMessage);
-                login = new LoginFram2(net, v -> {});
+                login = new LoginFrame(net, v -> {});
                 login.setVisible(true);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Không kết nối được server: " + e.getMessage());
@@ -37,7 +37,7 @@ public class ClientApp {
         switch (m.type) {
             case "ROUND_DETAIL_RESPONSE":
                 List<RoundResult> results = Json.from(m.payload.get("roundDetail"), new TypeReference<List<RoundResult>>() {});
-                roundDetailFrame = new RoundDetailFrame2(
+                roundDetailFrame = new RoundDetailFrame(
                         Integer.parseInt(m.payload.get("matchId")),
                         results
                 );
