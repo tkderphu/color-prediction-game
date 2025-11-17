@@ -72,6 +72,7 @@ public class ServerCore {
             matchPlayer.setUser(user);
             matchPlayer.setMatch(match);
 
+
             matchPlayerDao.savePlayer(matchPlayer);
             lobby.status.put(u, "PLAYING");
             ClientHandler h = lobby.online.get(u);
@@ -121,6 +122,24 @@ public class ServerCore {
                 Map<String, String> payload = new HashMap<>();
                 payload.put("round", Json.to(round));
                 payload.put("serverEpochMs", serverEpoch + "");
+
+
+                /**
+                 * init leaderboard
+                 */
+
+                if(roundNo == 1) {
+                    List<MatchPlayer> lb = ctx.buildLeaderboard(matchPlayerDao);
+                    for (User u : ctx.players) {
+                        ClientHandler h = lobby.online.get(u);
+                        if (h != null) {
+                            Map<String, String> rrPayload = new HashMap<>();
+                            rrPayload.put("leaderboard", Json.to(lb));
+                            h.send("UPDATE_TABLE_SCORE", rrPayload);
+                        }
+                    }
+                }
+
 
                 for (User u : ctx.players) {
                     ClientHandler h = lobby.online.get(u);

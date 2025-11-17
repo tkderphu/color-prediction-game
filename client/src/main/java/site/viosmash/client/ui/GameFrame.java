@@ -262,7 +262,7 @@ public class GameFrame extends JFrame {
 
         SwingUtilities.invokeLater(() -> {
             infoLabel.setText(String.format(
-                    "Vòng %d [%s] • Hiển thị: %.1fs • Trả lời: %.1fs",
+                    "Vòng %d [%s] • Hiển thị màu: %.1fs • Trả lời: %.1fs",
                     round.getRoundNo(),
                     round.getLevel(),
                     round.getShowMs() / 1000.0,
@@ -530,7 +530,7 @@ public class GameFrame extends JFrame {
     }
 
     private static List<Color> showCustomColorDialog(JFrame parent, List<Color> preSelectedColors) {
-        JDialog dialog = new JDialog(parent, "🎨 Chọn màu theo thứ tự", true);
+        JDialog dialog = new JDialog(parent, "🎨 Chọn màu màu đã nhìn thấy", true);
         dialog.setLayout(new BorderLayout(10, 10));
         dialog.getContentPane().setBackground(Color.WHITE);
 
@@ -538,7 +538,7 @@ public class GameFrame extends JFrame {
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
         mainPanel.setBackground(Color.WHITE);
 
-        JLabel instruction = new JLabel("<html><div style='text-align: center;'>Chọn màu theo đúng thứ tự đã hiển thị<br><small>Click để chọn, click lại để bỏ chọn</small></div></html>", JLabel.CENTER);
+        JLabel instruction = new JLabel("<html><div style='text-align: center;'>Chọn màu đã nhìn thấy<br><small>Click để chọn, click lại để bỏ chọn</small></div></html>", JLabel.CENTER);
         instruction.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
         JPanel colorGrid = new JPanel(new GridLayout(4, 7, 8, 8));

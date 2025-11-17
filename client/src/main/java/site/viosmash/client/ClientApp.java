@@ -33,7 +33,7 @@ public class ClientApp {
         });
     }
 
-    private void onMessage(Message m) {
+    public void onMessage(Message m) {
         switch (m.type) {
             case "ROUND_DETAIL_RESPONSE":
                 List<RoundResult> results = Json.from(m.payload.get("roundDetail"), new TypeReference<List<RoundResult>>() {});

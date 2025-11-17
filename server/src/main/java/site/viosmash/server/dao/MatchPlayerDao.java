@@ -17,7 +17,7 @@ public class MatchPlayerDao extends Dao{
     public void savePlayer(MatchPlayer matchPlayer) throws Exception {
         try (
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO match_players(match_id, user_id) VALUES (?,?)")) {
+                     "INSERT INTO match_players(match_id, user_id, total_score, total_time_ms) VALUES (?,?, 0, 0)")) {
             ps.setInt(1, matchPlayer.getMatch().getId());
             ps.setInt(2, matchPlayer.getUser().getId());
             ps.executeUpdate();
