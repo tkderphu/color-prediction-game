@@ -5,7 +5,7 @@ import java.sql.*;
 public class Dao {
     private static String url = "jdbc:mysql://localhost:3306/cgo?useSSL=false&serverTimezone=UTC";
     private static String user = "root";
-    private static String pass = "";
+    private static String pass = "root";
 
     protected Connection conn;
 
