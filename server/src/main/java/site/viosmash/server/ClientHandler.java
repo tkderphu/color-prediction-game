@@ -38,7 +38,7 @@ public class ClientHandler implements Runnable {
                 handle(msg);
             }
         } catch (Exception e) {
-             e.printStackTrace();
+            e.printStackTrace();
         } finally {
             logoutCleanup();
             try {
@@ -60,6 +60,12 @@ public class ClientHandler implements Runnable {
                 break;
             case "LOGIN":
                 handleLogin(m);
+                break;
+            case "REGISTER":
+                handleRegister(m);
+                break;
+            case "LOGOUT":
+                handleLogout(m);
                 break;
             case "INVITE":
                 handleInvite(m);
@@ -86,6 +92,65 @@ public class ClientHandler implements Runnable {
                 sendError("UNKNOWN_TYPE", "Unknown message type: " + m.type);
                 break;
         }
+    }
+
+    private void handleRegister(Message m) throws Exception {
+        if (user != null) {
+            sendError("ALREADY_LOGGED", "Already logged in");
+            return;
+        }
+
+        String username = m.payload.get("username");
+        String password = m.payload.get("password");
+
+        // Kiểm tra input
+        if (username == null || username.trim().isEmpty()) {
+            sendError("INVALID_USERNAME", "Username cannot be empty");
+            return;
+        }
+
+        if (password == null || password.trim().isEmpty()) {
+            sendError("INVALID_PASSWORD", "Password cannot be empty");
+            return;
+        }
+
+        // Kiểm tra username đã tồn tại chưa
+        if (core.userDao.isUsernameExists(username)) {
+            sendError("USERNAME_EXISTS", "Username already exists");
+            return;
+        }
+
+        // Đăng ký user mới
+        User newUser = new User();
+        newUser.setUsername(username);
+        newUser.setPassword(password);
+
+        boolean success = core.userDao.register(newUser);
+        if (success) {
+            Map<String, String> payload = new HashMap<>();
+            payload.put("message", "Registration successful");
+            send("REGISTER_OK", payload);
+        } else {
+            sendError("REGISTER_FAILED", "Registration failed");
+        }
+    }
+
+    private void handleLogout(Message m) throws Exception {
+        if (user == null) {
+            sendError("NOT_LOGGED_IN", "Not logged in");
+            return;
+        }
+
+        // Gửi phản hồi logout thành công
+        Map<String, String> payload = new HashMap<>();
+        payload.put("message", "Logout successful");
+        send("LOGOUT_OK", payload);
+
+        // Thực hiện cleanup
+        logoutCleanup();
+
+        // Reset user
+        this.user = null;
     }
 
     private void handleGetRoundHistoryDetail(Message m) {

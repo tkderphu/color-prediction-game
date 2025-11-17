@@ -29,6 +29,8 @@ public class HomeFrame extends javax.swing.JFrame {
         this.netClient = netClient;
         this.user = user;
         setUsername(user.getUsername());
+
+        addLogoutButton();
     }
 
     private void setUsername(String username) {
@@ -36,6 +38,43 @@ public class HomeFrame extends javax.swing.JFrame {
             jLabel1.setText("Chào, " + username);
         } else {
             jLabel1.setText("Người dùng");
+        }
+    }
+
+    private void addLogoutButton() {
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        topPanel.setOpaque(false);
+
+        JButton logoutButton = new JButton("Đăng xuất");
+        logoutButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        logoutButton.setBackground(new Color(220, 120, 50));
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setBorderPainted(false);
+        logoutButton.setFocusPainted(false);
+        logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        logoutButton.addActionListener(e -> handleLogout());
+
+        topPanel.add(logoutButton);
+
+        jPanel1.add(topPanel, BorderLayout.NORTH);
+    }
+
+    private void handleLogout() {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc muốn đăng xuất?",
+                "Xác nhận đăng xuất",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                Map<String, String> payload = new HashMap<>();
+                netClient.send("LOGOUT", payload);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi đăng xuất: " + ex.getMessage());
+            }
         }
     }
 
@@ -48,16 +87,12 @@ public class HomeFrame extends javax.swing.JFrame {
         Color titleColor = new Color(60, 60, 60);
         Color textColor = new Color(80, 80, 80);
 
-        // --------------------------------------------------------
-        // UPDATED PANEL: Background image + dark overlay
-        // --------------------------------------------------------
         jPanel1 = new javax.swing.JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
 
-                // 1. Draw the background image normally (no opacity change)
                 try {
                     Image image = new ImageIcon(getClass().getResource("/background.jpg")).getImage();
                     g2.drawImage(image, 0, 0, getWidth(), getHeight(), this);
@@ -66,16 +101,13 @@ public class HomeFrame extends javax.swing.JFrame {
                     g2.fillRect(0, 0, getWidth(), getHeight());
                 }
 
-                // 2. Add dark overlay to highlight foreground text
-                float overlayOpacity = 0.45f;  // change to 0.25–0.45 depending on preference
+                float overlayOpacity = 0.45f;
                 g2.setComposite(AlphaComposite.SrcOver.derive(overlayOpacity));
                 g2.setColor(Color.BLACK);
                 g2.fillRect(0, 0, getWidth(), getHeight());
-
                 g2.dispose();
             }
         };
-        // --------------------------------------------------------
 
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
@@ -207,7 +239,6 @@ public class HomeFrame extends javax.swing.JFrame {
     }
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
-        JOptionPane.showMessageDialog(this, "Chức năng lịch sử chưa implement!");
     }
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {

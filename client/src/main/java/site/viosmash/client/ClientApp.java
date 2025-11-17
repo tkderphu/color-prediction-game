@@ -7,6 +7,7 @@ import site.viosmash.client.ui.*;
 import site.viosmash.common.*;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,9 +73,26 @@ public class ClientApp {
                     homeFrame.setVisible(true);
                 });
                 break;
+            case "REGISTER_OK":
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null, "Đăng ký thành công! Vui lòng đăng nhập.");
+                    Window[] windows = Window.getWindows();
+                    for (Window window : windows) {
+                        if (window instanceof RegisterFrame) {
+                            ((RegisterFrame) window).onRegisterSuccess();
+                        }
+                    }
+                });
+                break;
+            case "LOGOUT_OK":
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null, "Đăng xuất thành công!");
+                    handleLogout();
+                });
+                break;
             case "ERROR":
                 SwingUtilities.invokeLater(() ->
-                    JOptionPane.showMessageDialog(null, "Lỗi: "+m.payload.get("msg")));
+                        JOptionPane.showMessageDialog(null, "Lỗi: "+m.payload.get("msg")));
                 break;
             case "ONLINE_LIST": {
                 try {
@@ -158,8 +176,19 @@ public class ClientApp {
         }
     }
 
+    private void handleLogout() {
+        if (homeFrame != null) homeFrame.dispose();
+        if (lobby != null) lobby.dispose();
+        if (game != null) game.dispose();
+        if (playedHistory != null) playedHistory.dispose();
+        if (leaderboardFrame != null) leaderboardFrame.dispose();
+        if (roundDetailFrame != null) roundDetailFrame.dispose();
 
+        login = new LoginFrame(net, v -> {});
+        login.setVisible(true);
 
+        this.user = null;
+    }
 
     public static void main(String[] args) throws Exception {
         new ClientApp().start();
