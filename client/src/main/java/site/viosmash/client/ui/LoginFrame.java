@@ -4,6 +4,8 @@ import site.viosmash.client.NetClient;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -14,23 +16,249 @@ import java.util.function.Consumer;
  */
 public class LoginFrame extends JFrame {
     private NetClient net;
+    private JPanel cardPanel;
+    private CardLayout cardLayout;
+
+    private JTextField loginUsernameField;
+    private JPasswordField loginPasswordField;
+    private JButton loginButton;
+
     public LoginFrame(NetClient net, Consumer<Void> onLoggedIn) {
         super("Đăng nhập");
+        this.net = net;
         initComponents();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        this.net = net;
-        jButton1.addActionListener(e -> handleLogin());
-
-
         setLocationRelativeTo(null);
+        setResizable(false);
+    }
+
+    private void initComponents() {
+        Color primaryColor = new Color(200, 134, 11);
+        Color secondaryColor = Color.WHITE;
+        Color accentColor = new Color(255, 255, 200);
+
+        cardLayout = new CardLayout();
+        cardPanel = new JPanel(cardLayout);
+        cardPanel.setOpaque(false);
+
+        JPanel loginPanel = createLoginPanel();
+
+        cardPanel.add(loginPanel, "LOGIN");
+
+        JPanel mainPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+
+                try {
+                    Image image = new ImageIcon(getClass().getResource("/background.jpg")).getImage();
+                    g2.drawImage(image, 0, 0, getWidth(), getHeight(), this);
+                } catch (Exception e) {
+                    g2.setColor(new Color(248, 249, 250));
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                }
+
+                float overlayOpacity = 0.45f;
+                g2.setComposite(AlphaComposite.SrcOver.derive(overlayOpacity));
+                g2.setColor(Color.BLACK);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                g2.dispose();
+            }
+        };
+
+        mainPanel.setPreferredSize(new Dimension(800, 500));
+        mainPanel.add(cardPanel, BorderLayout.CENTER);
+
+        setContentPane(mainPanel);
+        pack();
+    }
+
+    private JPanel createLoginPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+
+        JLabel titleLabel = new JLabel("ĐĂNG NHẬP");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(40, 0, 50, 0));
+
+        JPanel centerPanel = new JPanel();
+        centerPanel.setOpaque(false);
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 150, 0, 150));
+
+        JPanel formContainer = new JPanel();
+        formContainer.setOpaque(false);
+        formContainer.setLayout(new BoxLayout(formContainer, BoxLayout.Y_AXIS));
+        formContainer.setMaximumSize(new Dimension(400, 300));
+        formContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel usernamePanel = createFormField("Tên đăng nhập");
+        loginUsernameField = new JTextField();
+        setupTextField(loginUsernameField);
+        JPanel usernameFieldContainer = (JPanel) usernamePanel.getComponent(1);
+        usernameFieldContainer.add(loginUsernameField);
+
+        JPanel passwordPanel = createFormField("Mật khẩu");
+        loginPasswordField = new JPasswordField();
+        setupTextField(loginPasswordField);
+        JPanel passwordFieldContainer = (JPanel) passwordPanel.getComponent(1);
+        passwordFieldContainer.add(loginPasswordField);
+
+        loginButton = createStyledButton("Đăng nhập", new Color(200, 134, 11));
+        loginButton.addActionListener(e -> handleLogin());
+
+        JPanel switchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        switchPanel.setOpaque(false);
+
+        JLabel switchLabel = new JLabel("Chưa có tài khoản? ");
+        switchLabel.setForeground(Color.WHITE);
+        switchLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JLabel registerLink = new JLabel("Đăng ký ngay");
+        registerLink.setForeground(new Color(255, 255, 200));
+        registerLink.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        registerLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        registerLink.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                openRegisterFrame();
+            }
+        });
+
+        switchPanel.add(switchLabel);
+        switchPanel.add(registerLink);
+
+        formContainer.add(usernamePanel);
+        formContainer.add(Box.createRigidArea(new Dimension(0, 25)));
+        formContainer.add(passwordPanel);
+        formContainer.add(Box.createRigidArea(new Dimension(0, 40)));
+
+        centerPanel.add(Box.createVerticalGlue());
+        centerPanel.add(formContainer);
+        centerPanel.add(Box.createVerticalGlue());
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setOpaque(false);
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        buttonPanel.add(loginButton);
+
+        JPanel mainContainer = new JPanel();
+        mainContainer.setOpaque(false);
+        mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
+        mainContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainContainer.add(centerPanel);
+        mainContainer.add(buttonPanel);
+        mainContainer.add(Box.createRigidArea(new Dimension(0, 20)));
+        mainContainer.add(switchPanel);
+
+        panel.add(titleLabel, BorderLayout.NORTH);
+        panel.add(mainContainer, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private void openRegisterFrame() {
+        RegisterFrame registerFrame = new RegisterFrame(net, this, () -> {
+            showLoginPanel();
+        });
+        registerFrame.setVisible(true);
+        this.setVisible(false);
+    }
+
+    public void showLoginPanel() {
+        loginUsernameField.setText("");
+        loginPasswordField.setText("");
+    }
+
+    private JPanel createFormField(String labelText) {
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setMaximumSize(new Dimension(400, 70));
+        panel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        label.setForeground(Color.WHITE);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+        JPanel fieldContainer = new JPanel();
+        fieldContainer.setOpaque(false);
+        fieldContainer.setLayout(new BoxLayout(fieldContainer, BoxLayout.X_AXIS));
+        fieldContainer.setMaximumSize(new Dimension(400, 45));
+        fieldContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JSeparator separator = new JSeparator();
+        separator.setForeground(new Color(255, 255, 255, 180));
+        separator.setAlignmentX(Component.LEFT_ALIGNMENT);
+        separator.setMaximumSize(new Dimension(400, 2));
+
+        panel.add(label);
+        panel.add(fieldContainer);
+        panel.add(separator);
+
+        return panel;
+    }
+
+    private void setupTextField(JComponent field) {
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        field.setBackground(new Color(255, 255, 255, 200));
+        field.setForeground(Color.BLACK);
+        field.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
+        field.setOpaque(true);
+        field.setMaximumSize(new Dimension(400, 45));
+        field.setPreferredSize(new Dimension(400, 45));
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+    }
+
+    private JButton createStyledButton(String text, Color color) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                if (getModel().isPressed()) {
+                    g2.setColor(new Color(
+                            Math.max(color.getRed() - 40, 0),
+                            Math.max(color.getGreen() - 40, 0),
+                            Math.max(color.getBlue() - 40, 0)
+                    ));
+                } else {
+                    g2.setColor(color);
+                }
+
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+
+        button.setBackground(color);
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        button.setBorder(BorderFactory.createEmptyBorder(12, 40, 12, 40));
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.setPreferredSize(new Dimension(200, 45));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        return button;
     }
 
     private void handleLogin() {
-        String username = jTextField1.getText().trim();
-        String password = new String(jPasswordField1.getPassword()).trim();
+        String username = loginUsernameField.getText().trim();
+        String password = new String(loginPasswordField.getPassword()).trim();
 
         if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập cả tên người dùng và mật khẩu", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập cả tên đăng nhập và mật khẩu", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -43,247 +271,4 @@ public class LoginFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-
-    private void initComponents() {
-
-
-        Color primaryColor = new Color(200, 134, 11);
-        Color secondaryColor = Color.WHITE;
-        Color accentColor = new Color(255, 255, 200);
-        Color dividerColor = new Color(255, 255, 255, 180);
-        Color inputBackground = new Color(255, 255, 255, 200);
-        Color inputTextColor = Color.BLACK;
-
-        jPanel1 = new javax.swing.JPanel(){
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-
-                // 1. Draw the background image normally (no opacity change)
-                try {
-                    Image image = new ImageIcon(getClass().getResource("/background.jpg")).getImage();
-                    g2.drawImage(image, 0, 0, getWidth(), getHeight(), this);
-                } catch (Exception e) {
-//                    g2.setColor(backgroundColor);
-                    g2.fillRect(0, 0, getWidth(), getHeight());
-                }
-
-                // 2. Add dark overlay to highlight foreground text
-                float overlayOpacity = 0.45f;  // change to 0.25–0.45 depending on preference
-                g2.setComposite(AlphaComposite.SrcOver.derive(overlayOpacity));
-                g2.setColor(Color.BLACK);
-                g2.fillRect(0, 0, getWidth(), getHeight());
-
-                g2.dispose();
-            }
-        };
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
-        jSeparator1 = new javax.swing.JSeparator();
-        jLabel3 = new javax.swing.JLabel();
-        jPasswordField1 = new javax.swing.JPasswordField();
-        jSeparator2 = new javax.swing.JSeparator();
-        jPanel3 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-        jPanel4 = new javax.swing.JPanel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        jPanel1.setBackground(new java.awt.Color(248, 249, 250));
-        jPanel1.setMinimumSize(new java.awt.Dimension(800, 500));
-        jPanel1.setPreferredSize(new java.awt.Dimension(800, 500));
-        jPanel1.setLayout(new java.awt.BorderLayout());
-
-        jLabel1.setFont(new java.awt.Font("Segoe UI", Font.BOLD, 36));
-        jLabel1.setForeground(secondaryColor);
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Đăng nhập");
-        jLabel1.setBorder(javax.swing.BorderFactory.createEmptyBorder(60, 0, 50, 0));
-        jPanel1.add(jLabel1, java.awt.BorderLayout.NORTH);
-
-        javax.swing.JPanel centerPanel = new javax.swing.JPanel();
-        centerPanel.setOpaque(false);
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-        centerPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 150, 0, 150));
-
-        JPanel formContainer = new JPanel();
-        formContainer.setOpaque(false);
-        formContainer.setLayout(new BoxLayout(formContainer, BoxLayout.Y_AXIS));
-        formContainer.setMaximumSize(new Dimension(400, 400));
-        formContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel usernamePanel = new JPanel();
-        usernamePanel.setOpaque(false);
-        usernamePanel.setLayout(new BoxLayout(usernamePanel, BoxLayout.Y_AXIS));
-        usernamePanel.setMaximumSize(new Dimension(400, 80));
-        usernamePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        jLabel2.setFont(new java.awt.Font("Segoe UI", Font.BOLD, 16));
-        jLabel2.setForeground(secondaryColor);
-        jLabel2.setText("Tên tài khoản");
-        jLabel2.setAlignmentX(Component.LEFT_ALIGNMENT);
-        jLabel2.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 10, 0));
-
-        jTextField1.setFont(new java.awt.Font("Segoe UI", Font.PLAIN, 16));
-        jTextField1.setBackground(inputBackground);
-        jTextField1.setForeground(inputTextColor);
-        jTextField1.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 15, 12, 15));
-        jTextField1.setOpaque(true);
-        jTextField1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        jTextField1.setMaximumSize(new Dimension(400, 45));
-        jTextField1.setPreferredSize(new Dimension(400, 45));
-
-        jSeparator1.setForeground(dividerColor);
-        jSeparator1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        jSeparator1.setMaximumSize(new Dimension(400, 2));
-
-        usernamePanel.add(jLabel2);
-        usernamePanel.add(jTextField1);
-        usernamePanel.add(jSeparator1);
-
-        formContainer.add(usernamePanel);
-        formContainer.add(Box.createRigidArea(new Dimension(0, 25)));
-
-        JPanel passwordPanel = new JPanel();
-        passwordPanel.setOpaque(false);
-        passwordPanel.setLayout(new BoxLayout(passwordPanel, BoxLayout.Y_AXIS));
-        passwordPanel.setMaximumSize(new Dimension(400, 80));
-        passwordPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        jLabel3.setFont(new java.awt.Font("Segoe UI", Font.BOLD, 16));
-        jLabel3.setForeground(secondaryColor);
-        jLabel3.setText("Mật khẩu");
-        jLabel3.setAlignmentX(Component.LEFT_ALIGNMENT);
-        jLabel3.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 10, 0));
-
-        jPasswordField1.setFont(new java.awt.Font("Segoe UI", Font.PLAIN, 16));
-        jPasswordField1.setBackground(inputBackground);
-        jPasswordField1.setForeground(inputTextColor);
-        jPasswordField1.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 15, 12, 15));
-        jPasswordField1.setOpaque(true);
-        jPasswordField1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        jPasswordField1.setMaximumSize(new Dimension(400, 45));
-        jPasswordField1.setPreferredSize(new Dimension(400, 45));
-
-        jSeparator2.setForeground(dividerColor);
-        jSeparator2.setAlignmentX(Component.LEFT_ALIGNMENT);
-        jSeparator2.setMaximumSize(new Dimension(400, 2));
-
-        passwordPanel.add(jLabel3);
-        passwordPanel.add(jPasswordField1);
-        passwordPanel.add(jSeparator2);
-
-        formContainer.add(passwordPanel);
-
-        centerPanel.add(Box.createVerticalGlue());
-        centerPanel.add(formContainer);
-        centerPanel.add(Box.createVerticalGlue());
-
-        jPanel3.setOpaque(false);
-        jPanel3.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 20));
-
-        jButton1 = new JButton("Đăng nhập") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                if (getModel().isPressed()) {
-                    g2.setColor(new Color(164, 114, 0));
-                } else {
-                    g2.setColor(primaryColor);
-                }
-
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
-                g2.dispose();
-
-                super.paintComponent(g);
-            }
-
-            @Override
-            protected void paintBorder(Graphics g) {
-            }
-        };
-        jButton1.setBackground(primaryColor);
-        jButton1.setForeground(Color.WHITE);
-        jButton1.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        jButton1.setBorder(BorderFactory.createEmptyBorder(12, 40, 12, 40));
-        jButton1.setFocusPainted(false);
-        jButton1.setContentAreaFilled(false);
-        jButton1.setPreferredSize(new Dimension(200, 45));
-        jButton1.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        jPanel3.add(jButton1);
-
-        jPanel4.setOpaque(false);
-        jPanel4.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
-
-        jLabel4.setFont(new java.awt.Font("Segoe UI", Font.PLAIN, 14));
-        jLabel4.setForeground(secondaryColor);
-//        jLabel4.setText("Bạn chưa có tài khoản?");
-
-        jLabel5.setFont(new java.awt.Font("Segoe UI", Font.BOLD, 14));
-        jLabel5.setForeground(accentColor);
-//        jLabel5.setText("Đăng ký");
-        jLabel5.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-
-        jPanel4.add(jLabel4);
-        jPanel4.add(jLabel5);
-
-
-        JPanel mainContainer = new JPanel();
-        mainContainer.setOpaque(false);
-        mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
-
-        mainContainer.add(centerPanel);
-        mainContainer.add(jPanel3);
-        mainContainer.add(jPanel4);
-
-        jPanel1.add(mainContainer, java.awt.BorderLayout.CENTER);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-
-        pack();
-    }
-
-
-    public void setBackgroundImage(String imagePath) {
-        jPanel1.repaint();
-    }
-
-
-    private javax.swing.JButton jButton1;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JPasswordField jPasswordField1;
-    private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JSeparator jSeparator2;
-    private javax.swing.JTextField jTextField1;
-
 }
